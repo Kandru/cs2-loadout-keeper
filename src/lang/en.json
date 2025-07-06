@@ -1,0 +1,6 @@
+{
+    "core.debugprint": "[LoadoutKeeper][DEBUG]: {message}",
+    "core.config": "[LoadoutKeeper] Configuration loaded",
+    "admin.unknown_command": "[LoadoutKeeper] Unknown command: {command}",
+    "admin.reload": "[LoadoutKeeper] Configuration reloaded"
+}
