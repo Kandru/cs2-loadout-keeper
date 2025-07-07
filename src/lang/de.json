@@ -2,7 +2,7 @@
     "core.debugprint": "[LoadoutKeeper][DEBUG]: {message}",
     "core.config": "[LoadoutKeeper] Konfiguration geladen",
     "loadout.given.chat": "[LoadoutKeeper] Loadout gegeben :)",
-    "loadout.given.center": "Viel Spaß mit deinem Loadout!",
+    "loadout.given.center": "Viel Spaß mit deinem Loadout <3",
     "admin.unknown_command": "[LoadoutKeeper] Unbekannter Befehl: {command}",
     "admin.reload": "[LoadoutKeeper] Konfiguration neu geladen",
     "admin.enabled": "[LoadoutKeeper] LoadoutKeeper ist jetzt aktiviert",
