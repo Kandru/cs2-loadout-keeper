@@ -197,12 +197,39 @@ namespace LoadoutKeeper
         private void GivePlayerLoadout(CCSPlayerController player)
         {
             if (player == null
-                || !player.IsValid)
+                || !player.IsValid
+                || player.Pawn?.Value?.WeaponServices == null)
             {
                 return;
             }
             if (_loadouts.TryGetValue(player.SteamID, out Dictionary<string, int>? loadout) && loadout.Count > 0)
             {
+                bool hasBomb = false;
+                // check if player has the bomb
+                foreach (CHandle<CBasePlayerWeapon> weaponHandle in player.Pawn.Value.WeaponServices.MyWeapons)
+                {
+                    // skip invalid weapon handles
+                    if (weaponHandle == null
+                        || !weaponHandle.IsValid)
+                    {
+                        continue;
+                    }
+                    // get weapon from handle
+                    CBasePlayerWeapon? playerWeapon = weaponHandle.Value;
+                    // skip invalid weapon
+                    if (playerWeapon == null
+                        || !playerWeapon.IsValid)
+                    {
+                        continue;
+                    }
+                    // get weapon name
+                    string? weaponName = Entities.PlayerWeaponName(playerWeapon);
+                    if (weaponName == "weapon_c4")
+                    {
+                        hasBomb = true;
+                        break;
+                    }
+                }
                 // remove old loadout
                 player.RemoveWeapons();
                 // wait for next frame to ensure player has been updated properly
@@ -216,6 +243,10 @@ namespace LoadoutKeeper
                     }
                     // give initial item(s)
                     _ = player.GiveNamedItem("weapon_knife");
+                    if (hasBomb)
+                    {
+                        _ = player.GiveNamedItem("weapon_c4");
+                    }
                     // give loadout items
                     foreach (KeyValuePair<string, int> kvp in loadout)
                     {
