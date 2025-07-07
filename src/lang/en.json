@@ -2,5 +2,7 @@
     "core.debugprint": "[LoadoutKeeper][DEBUG]: {message}",
     "core.config": "[LoadoutKeeper] Configuration loaded",
     "admin.unknown_command": "[LoadoutKeeper] Unknown command: {command}",
-    "admin.reload": "[LoadoutKeeper] Configuration reloaded"
+    "admin.reload": "[LoadoutKeeper] Configuration reloaded",
+    "admin.enabled": "[LoadoutKeeper] LoadoutKeeper is now enabled",
+    "admin.disabled": "[LoadoutKeeper] LoadoutKeeper is now disabled"
 }

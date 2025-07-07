@@ -11,7 +11,7 @@ namespace LoadoutKeeper
         public override string ModuleAuthor => "Kalle <kalle@kandru.de>";
 
         private readonly Dictionary<ulong, Dictionary<string, int>> _loadouts = [];
-        private readonly List<CCSPlayerController> _spawnCooldown = [];
+        private readonly List<CCSPlayerController> _spawnCooldowns = [];
         private readonly List<string> _primaryWeapons = [
             "weapon_ak47",
             "weapon_aug",
@@ -75,10 +75,10 @@ namespace LoadoutKeeper
             RegisterEventHandler<EventItemPickup>(OnItemPickup);
             if (hotReload)
             {
-                foreach (CCSPlayerController player in Utilities.GetPlayers().Where(static p => !p.IsBot))
+                foreach (CCSPlayerController entry in Utilities.GetPlayers().Where(static p => !p.IsBot))
                 {
                     // update player loadout
-                    LoadConfig(player.SteamID);
+                    LoadConfig(entry.SteamID);
                 }
             }
         }
@@ -97,7 +97,7 @@ namespace LoadoutKeeper
         {
             SaveConfigs();
             _loadouts.Clear();
-            _spawnCooldown.Clear();
+            _spawnCooldowns.Clear();
         }
 
         private HookResult OnPlayerConnect(EventPlayerConnectFull @event, GameEventInfo info)
@@ -106,7 +106,8 @@ namespace LoadoutKeeper
             if (player == null
                 || !player.IsValid
                 || player.IsBot
-                || player.IsHLTV)
+                || player.IsHLTV
+                || !Config.Enabled)
             {
                 return HookResult.Continue;
             }
@@ -132,7 +133,7 @@ namespace LoadoutKeeper
                 _loadouts.Clear();
             }
             // remove player from cooldown list
-            _ = _spawnCooldown.Remove(player);
+            _ = _spawnCooldowns.Remove(player);
             return HookResult.Continue;
         }
 
@@ -148,9 +149,9 @@ namespace LoadoutKeeper
                 return HookResult.Continue;
             }
             // add player to cooldown list to prevent updating loadout on spawn..
-            if (!_spawnCooldown.Contains(player))
+            if (!_spawnCooldowns.Contains(player))
             {
-                _spawnCooldown.Add(player);
+                _spawnCooldowns.Add(player);
             }
             // give loadout to player
             Server.NextFrame(() => GivePlayerLoadout(player));
@@ -162,9 +163,9 @@ namespace LoadoutKeeper
                 {
                     return;
                 }
-                if (_spawnCooldown.Contains(player))
+                if (_spawnCooldowns.Contains(player))
                 {
-                    _ = _spawnCooldown.Remove(player);
+                    _ = _spawnCooldowns.Remove(player);
                 }
             });
             return HookResult.Continue;
@@ -177,7 +178,7 @@ namespace LoadoutKeeper
                 || !player.IsValid
                 || player.IsBot
                 || !Config.Enabled
-                || _spawnCooldown.Contains(player))
+                || _spawnCooldowns.Contains(player))
             {
                 return HookResult.Continue;
             }
