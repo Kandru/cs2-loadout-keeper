@@ -31,12 +31,12 @@ namespace LoadoutKeeper
             );
             if (!Directory.Exists(playerConfigPath))
             {
-                Directory.CreateDirectory(playerConfigPath);
+                _ = Directory.CreateDirectory(playerConfigPath);
             }
             // save player loadouts
-            foreach (var kvp in _loadouts)
+            foreach (KeyValuePair<ulong, Dictionary<string, int>> kvp in _loadouts)
             {
-                var jsonString = JsonSerializer.Serialize(kvp.Value, CachedJsonOptions);
+                string jsonString = JsonSerializer.Serialize(kvp.Value, CachedJsonOptions);
                 File.WriteAllText(Path.Combine(playerConfigPath, $"{kvp.Key}.json"), jsonString);
             }
         }

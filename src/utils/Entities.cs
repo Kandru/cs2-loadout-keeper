@@ -9,8 +9,12 @@ namespace LoadoutKeeper.Utils
     {
         public static string? PlayerWeaponName(CBasePlayerWeapon weapon)
         {
-            if (!weapon.IsValid) return null;
-            var vdata = weapon.GetVData<CCSWeaponBaseVData>()!;
+            if (!weapon.IsValid)
+            {
+                return null;
+            }
+
+            CCSWeaponBaseVData vdata = weapon.GetVData<CCSWeaponBaseVData>()!;
             return Utilities.ReadStringUtf8(Marshal.ReadIntPtr(Schema.GetSchemaValue<nint>(vdata.Handle, "CCSWeaponBaseVData", "m_szAnimClass"), 0x10) + 0x10);
         }
     }

@@ -124,7 +124,7 @@ namespace LoadoutKeeper
                 _ = player.GiveNamedItem("weapon_knife");
                 // give loadout items
                 Dictionary<string, int> loadout = new(value);
-                foreach (var kvp in loadout)
+                foreach (KeyValuePair<string, int> kvp in loadout)
                 {
                     for (int i = 0; i < kvp.Value; i++)
                     {
@@ -173,9 +173,9 @@ namespace LoadoutKeeper
                     continue;
                 }
                 // add weapon to loadout
-                if (playerWeapons.ContainsKey(weaponName))
+                if (playerWeapons.TryGetValue(weaponName, out int value))
                 {
-                    playerWeapons[weaponName]++;
+                    playerWeapons[weaponName] = ++value;
                 }
                 else
                 {
