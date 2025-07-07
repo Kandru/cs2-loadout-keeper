@@ -9,6 +9,9 @@ namespace LoadoutKeeper
     {
         // disabled
         [JsonPropertyName("enabled")] public bool Enabled { get; set; } = true;
+        // announce loadout given
+        [JsonPropertyName("announce_loadout_given_chat")] public bool AnnounceLoadoutGivenChat { get; set; } = true;
+        [JsonPropertyName("announce_loadout_given_center")] public bool AnnounceLoadoutGivenCenter { get; set; } = true;
     }
 
     public partial class LoadoutKeeper : IPluginConfig<PluginConfig>

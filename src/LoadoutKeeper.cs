@@ -221,6 +221,15 @@ namespace LoadoutKeeper
                             _ = player.GiveNamedItem(kvp.Key);
                         }
                     }
+                    // announcement
+                    if (Config.AnnounceLoadoutGivenChat)
+                    {
+                        player.PrintToChat(Localizer["loadout.given.chat"]);
+                    }
+                    if (Config.AnnounceLoadoutGivenCenter)
+                    {
+                        player.PrintToCenter(Localizer["loadout.given.center"]);
+                    }
                 });
             }
         }
