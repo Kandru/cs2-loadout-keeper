@@ -111,8 +111,11 @@ namespace LoadoutKeeper
             {
                 return HookResult.Continue;
             }
-            // try to load player loadout
-            LoadConfig(player.SteamID);
+            // try to load player loadout only if not already loaded
+            if (!_loadouts.ContainsKey(player.SteamID))
+            {
+                LoadConfig(player.SteamID);
+            }
             return HookResult.Continue;
         }
 
