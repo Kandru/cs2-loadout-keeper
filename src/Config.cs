@@ -37,15 +37,15 @@ namespace LoadoutKeeper
             foreach (var kvp in _loadouts)
             {
                 var jsonString = JsonSerializer.Serialize(kvp.Value, CachedJsonOptions);
-                File.WriteAllText(Path.Combine(playerConfigPath, $"{string.Concat(kvp.Key.Split(Path.GetInvalidFileNameChars()))}.json"), jsonString);
+                File.WriteAllText(Path.Combine(playerConfigPath, $"{kvp.Key}.json"), jsonString);
             }
         }
 
-        public void LoadConfig(string NetworkIDString)
+        public void LoadConfig(ulong SteamID)
         {
             string playerConfigPath = Path.Combine(
                 $"{Path.GetDirectoryName(Config.GetConfigPath())}/players/" ?? "./players/",
-                $"{string.Concat(NetworkIDString.Split(Path.GetInvalidFileNameChars()))}.json"
+                $"{SteamID}.json"
             );
             // skip if player config file does not exist
             if (!File.Exists(playerConfigPath))
@@ -59,7 +59,7 @@ namespace LoadoutKeeper
                 Dictionary<string, int>? playerLoadout = JsonSerializer.Deserialize<Dictionary<string, int>>(jsonString, CachedJsonOptions);
                 if (playerLoadout != null)
                 {
-                    _loadouts[NetworkIDString] = playerLoadout;
+                    _loadouts[SteamID] = playerLoadout;
                 }
             }
             catch (Exception ex)

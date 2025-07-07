@@ -10,7 +10,7 @@ namespace LoadoutKeeper
         public override string ModuleName => "CS2 LoadoutKeeper";
         public override string ModuleAuthor => "Kalle <kalle@kandru.de>";
 
-        private readonly Dictionary<string, Dictionary<string, int>> _loadouts = [];
+        private readonly Dictionary<ulong, Dictionary<string, int>> _loadouts = [];
 
         public override void Load(bool hotReload)
         {
@@ -24,7 +24,7 @@ namespace LoadoutKeeper
                 foreach (CCSPlayerController player in Utilities.GetPlayers().Where(static p => !p.IsBot))
                 {
                     // update player loadout
-                    LoadConfig(player.NetworkIDString);
+                    LoadConfig(player.SteamID);
                 }
             }
         }
@@ -50,12 +50,13 @@ namespace LoadoutKeeper
             CCSPlayerController? player = @event.Userid;
             if (player == null
                 || !player.IsValid
-                || player.IsBot)
+                || player.IsBot
+                || player.IsHLTV)
             {
                 return HookResult.Continue;
             }
             // try to load player loadout
-            LoadConfig(player.NetworkIDString);
+            LoadConfig(player.SteamID);
             return HookResult.Continue;
         }
 
@@ -115,7 +116,7 @@ namespace LoadoutKeeper
             {
                 return;
             }
-            if (_loadouts.TryGetValue(player.NetworkIDString, out Dictionary<string, int>? value) && value.Count > 0)
+            if (_loadouts.TryGetValue(player.SteamID, out Dictionary<string, int>? value) && value.Count > 0)
             {
                 // remove old loadout
                 player.RemoveWeapons();
@@ -187,9 +188,9 @@ namespace LoadoutKeeper
                 return;
             }
             // update or add player's loadout
-            if (!_loadouts.TryAdd(player.NetworkIDString, playerWeapons))
+            if (!_loadouts.TryAdd(player.SteamID, playerWeapons))
             {
-                _loadouts[player.NetworkIDString] = playerWeapons;
+                _loadouts[player.SteamID] = playerWeapons;
             }
         }
     }
