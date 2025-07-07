@@ -11,6 +11,60 @@ namespace LoadoutKeeper
         public override string ModuleAuthor => "Kalle <kalle@kandru.de>";
 
         private readonly Dictionary<ulong, Dictionary<string, int>> _loadouts = [];
+        private readonly List<CCSPlayerController> _spawnCooldown = [];
+        private readonly List<string> _primaryWeapons = [
+            "weapon_ak47",
+            "weapon_aug",
+            "weapon_awp",
+            "weapon_bizon",
+            "weapon_famas",
+            "weapon_g3sg1",
+            "weapon_galilar",
+            "weapon_m249",
+            "weapon_m4a1",
+            "weapon_m4a1_silencer",
+            "weapon_mac10",
+            "weapon_mag7",
+            "weapon_mp5sd",
+            "weapon_mp7",
+            "weapon_mp9",
+            "weapon_negev",
+            "weapon_nova",
+            "weapon_p90",
+            "weapon_sawedoff",
+            "weapon_scar20",
+            "weapon_sg556",
+            "weapon_ssg08",
+            "weapon_ump45",
+            "weapon_xm1014"
+        ];
+        private readonly List<string> _secondaryWeapons = [
+            "weapon_cz75a",
+            "weapon_deagle",
+            "weapon_elite",
+            "weapon_fiveseven",
+            "weapon_glock",
+            "weapon_p250",
+            "weapon_revolver",
+            "weapon_tec9",
+            "weapon_usp_silencer",
+            "weapon_hkp2000"
+        ];
+
+        private readonly List<string> _grenades = [
+            "weapon_flashbang",
+            "weapon_incgrenade",
+            "weapon_molotov",
+            "weapon_smokegrenade",
+            "weapon_decoy"
+        ];
+
+        private readonly List<string> _items = [
+            "weapon_taser",
+            //"item_assaultsuit",
+            //"item_defuser",
+            //"item_kevlar"
+        ];
 
         public override void Load(bool hotReload)
         {
@@ -43,6 +97,7 @@ namespace LoadoutKeeper
         {
             SaveConfigs();
             _loadouts.Clear();
+            _spawnCooldown.Clear();
         }
 
         private HookResult OnPlayerConnect(EventPlayerConnectFull @event, GameEventInfo info)
@@ -76,6 +131,8 @@ namespace LoadoutKeeper
                 SaveConfigs();
                 _loadouts.Clear();
             }
+            // remove player from cooldown list
+            _ = _spawnCooldown.Remove(player);
             return HookResult.Continue;
         }
 
@@ -90,8 +147,26 @@ namespace LoadoutKeeper
             {
                 return HookResult.Continue;
             }
+            // add player to cooldown list to prevent updating loadout on spawn..
+            if (!_spawnCooldown.Contains(player))
+            {
+                _spawnCooldown.Add(player);
+            }
             // give loadout to player
-            GivePlayerLoadout(player);
+            Server.NextFrame(() => GivePlayerLoadout(player));
+            // remove player from cooldown list after a short delay
+            _ = AddTimer(0.1f, () =>
+            {
+                if (player == null
+                || !player.IsValid)
+                {
+                    return;
+                }
+                if (_spawnCooldown.Contains(player))
+                {
+                    _ = _spawnCooldown.Remove(player);
+                }
+            });
             return HookResult.Continue;
         }
 
@@ -101,11 +176,17 @@ namespace LoadoutKeeper
             if (player == null
                 || !player.IsValid
                 || player.IsBot
-                || !Config.Enabled)
+                || !Config.Enabled
+                || _spawnCooldown.Contains(player))
             {
                 return HookResult.Continue;
             }
-            UpdatePlayerLoadout(player);
+            string item = @event.Item;
+            Server.NextFrame(() =>
+            {
+                // update player loadout after item pickup
+                UpdatePlayerLoadout(player, item);
+            });
             return HookResult.Continue;
         }
 
@@ -143,7 +224,7 @@ namespace LoadoutKeeper
             }
         }
 
-        private void UpdatePlayerLoadout(CCSPlayerController player)
+        private void UpdatePlayerLoadout(CCSPlayerController player, string Item)
         {
             if (player == null
                 || !player.IsValid
@@ -151,55 +232,97 @@ namespace LoadoutKeeper
             {
                 return;
             }
-            // set new loadout
-            Dictionary<string, int> playerWeapons = [];
-            foreach (CHandle<CBasePlayerWeapon> weaponHandle in player.Pawn.Value.WeaponServices.MyWeapons)
+            // check if player has loadout or create otherwise
+            if (!_loadouts.TryGetValue(player.SteamID, out Dictionary<string, int>? value))
             {
-                // skip invalid weapon handles
-                if (weaponHandle == null
-                    || !weaponHandle.IsValid)
+                value = [];
+                _loadouts[player.SteamID] = value;
+            }
+            // check if weapon is found
+            string? _primaryWeapon = _primaryWeapons.FirstOrDefault(w => w.Contains(Item, StringComparison.OrdinalIgnoreCase));
+            string? _secondaryWeapon = _secondaryWeapons.FirstOrDefault(w => w.Contains(Item, StringComparison.OrdinalIgnoreCase));
+            string? _grenade = _grenades.FirstOrDefault(w => w.Contains(Item, StringComparison.OrdinalIgnoreCase));
+            string? _item = _items.FirstOrDefault(w => w.Contains(Item, StringComparison.OrdinalIgnoreCase));
+
+            if (_primaryWeapon != null)
+            {
+                // Only allow one primary weapon in loadout
+                foreach (string weapon in _primaryWeapons)
                 {
-                    continue;
+                    _ = value.Remove(weapon);
                 }
-                // get weapon from handle
-                CBasePlayerWeapon? playerWeapon = weaponHandle.Value;
-                // skip invalid weapon
-                if (playerWeapon == null
-                    || !playerWeapon.IsValid)
+                // check if m4a1 or m4a1_silencer was selected (both report back as m4a1 unfortunately)
+                if (Item.Equals("m4a1", StringComparison.OrdinalIgnoreCase))
                 {
-                    continue;
+                    foreach (CHandle<CBasePlayerWeapon> weaponHandle in player.Pawn.Value.WeaponServices.MyWeapons)
+                    {
+                        // skip invalid weapon handles
+                        if (weaponHandle == null
+                            || !weaponHandle.IsValid)
+                        {
+                            continue;
+                        }
+                        // get weapon from handle
+                        CBasePlayerWeapon? playerWeapon = weaponHandle.Value;
+                        // skip invalid weapon
+                        if (playerWeapon == null
+                            || !playerWeapon.IsValid)
+                        {
+                            continue;
+                        }
+                        // get weapon name
+                        string? weaponName = Entities.PlayerWeaponName(playerWeapon);
+                        if (weaponName != null && weaponName.Contains("m4a1", StringComparison.OrdinalIgnoreCase))
+                        {
+                            _primaryWeapon = weaponName;
+                            break;
+                        }
+                    }
                 }
-                // get weapon name
-                string? weaponName = Entities.PlayerWeaponName(playerWeapon);
-                if (string.IsNullOrEmpty(weaponName))
+
+                value[_primaryWeapon] = 1;
+            }
+            else if (_secondaryWeapon != null)
+            {
+                // Only allow one secondary weapon in loadout
+                foreach (string weapon in _secondaryWeapons)
                 {
-                    continue;
+                    _ = _loadouts[player.SteamID].Remove(weapon);
                 }
-                // ignore knife & c4
-                if (weaponName.Contains("knife", StringComparison.OrdinalIgnoreCase)
-                    || weaponName.Contains("c4", StringComparison.OrdinalIgnoreCase))
+                _loadouts[player.SteamID][_secondaryWeapon] = 1;
+            }
+            else if (_grenade != null)
+            {
+                // Only add grenade if not already present
+                if (!_loadouts[player.SteamID].ContainsKey(_grenade))
                 {
-                    continue;
-                }
-                // add weapon to loadout
-                if (playerWeapons.TryGetValue(weaponName, out int value))
-                {
-                    playerWeapons[weaponName] = ++value;
-                }
-                else
-                {
-                    playerWeapons.Add(weaponName, 1);
+                    _loadouts[player.SteamID][_grenade] = 1;
                 }
             }
-            // do not add empty loadout
-            if (playerWeapons.Count == 0)
+            else if (_item != null)
             {
-                return;
+                // Only allow one of each item
+                _loadouts[player.SteamID][_item] = 1;
             }
-            // update or add player's loadout
-            if (!_loadouts.TryAdd(player.SteamID, playerWeapons))
+            else if (Item.Equals("vest", StringComparison.OrdinalIgnoreCase))
             {
-                _loadouts[player.SteamID] = playerWeapons;
+                // give kevlar if player does not have it
+                if (!_loadouts[player.SteamID].ContainsKey("item_kevlar"))
+                {
+                    _loadouts[player.SteamID]["item_kevlar"] = 1;
+                }
+            }
+            else if (Item.Equals("vesthelm", StringComparison.OrdinalIgnoreCase))
+            {
+                // give kevlar if player does not have it
+                if (!_loadouts[player.SteamID].ContainsKey("item_assaultsuit"))
+                {
+                    _loadouts[player.SteamID]["item_assaultsuit"] = 1;
+                }
+            }
+            else
+            {
+                Console.WriteLine($"Item {Item} is not a valid loadout item for player {player.SteamID}, skipping...");
             }
         }
     }
