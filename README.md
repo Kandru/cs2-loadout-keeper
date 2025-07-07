@@ -22,12 +22,29 @@ Updating is even easier: simply overwrite all plugin files and they will be relo
 This plugin automatically creates a readable JSON configuration file. This configuration file can be found in `/addons/counterstrikesharp/configs/plugins/LoadoutKeeper/LoadoutKeeper.json`.
 
 ```json
-
+{
+  "enabled": true,
+  "ConfigVersion": 1
+}
 ```
+
+### enabled
+
+Whether or not this plug-in is enabled.
 
 ## Commands
 
-TODO
+### loadoutkeeper reload (server console only)
+
+Reloads the plug-in configuration.
+
+### loadoutkeeper enable (server console only)
+
+Enables the plug-in and saves this state to the configuration.
+
+### loadoutkeeper disable (server console only)
+
+Disables the plug-in and saves this state to the configuration.
 
 ## Compile Yourself
 
