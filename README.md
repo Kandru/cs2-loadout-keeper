@@ -1,6 +1,3 @@
-> [!IMPORTANT]  
-> Work in progress. Might not work as expected. Use our [CS2 Update Manager](https://github.com/Kandru/cs2-update-manager/) to keep updated just in case :)
-
 # CounterstrikeSharp - Loadout Keeper
 
 [![UpdateManager Compatible](https://img.shields.io/badge/CS2-UpdateManager-darkgreen)](https://github.com/Kandru/cs2-update-manager/)
@@ -9,7 +6,7 @@
 [![issues - cs2-map-modifier](https://img.shields.io/github/issues/Kandru/cs2-loadout-keeper)](https://github.com/Kandru/cs2-loadout-keeper/issues)
 [![](https://www.paypalobjects.com/en_US/i/btn/btn_donateCC_LG.gif)](https://www.paypal.com/donate/?hosted_button_id=C2AVYKGVP9TRG)
 
-Simple plug-in that remembers the player's bought or picked up weapons and gives these back to the player after (re)spawn.
+Simple plug-in that remembers the player's bought or picked up weapons and gives these back to the player after (re)spawn. Saves them into a config file for each player (via SteamID) and loads them when a player joins the server.
 
 ## Installation
 
