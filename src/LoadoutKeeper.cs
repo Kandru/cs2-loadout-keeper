@@ -233,6 +233,10 @@ namespace LoadoutKeeper
                     {
                         player.PrintToCenter(Localizer["loadout.given.center"]);
                     }
+                    if (Config.AnnounceLoadoutGivenCenterAlert)
+                    {
+                        player.PrintToCenterAlert(Localizer["loadout.given.center"]);
+                    }
                 });
             }
         }
