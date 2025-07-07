@@ -116,21 +116,30 @@ namespace LoadoutKeeper
             {
                 return;
             }
-            if (_loadouts.TryGetValue(player.SteamID, out Dictionary<string, int>? value) && value.Count > 0)
+            if (_loadouts.TryGetValue(player.SteamID, out Dictionary<string, int>? loadout) && loadout.Count > 0)
             {
                 // remove old loadout
                 player.RemoveWeapons();
-                // give initial item(s)
-                _ = player.GiveNamedItem("weapon_knife");
-                // give loadout items
-                Dictionary<string, int> loadout = new(value);
-                foreach (KeyValuePair<string, int> kvp in loadout)
+                // wait for next frame to ensure player has been updated properly
+                Server.NextFrame(() =>
                 {
-                    for (int i = 0; i < kvp.Value; i++)
+                    // check if player is still valid
+                    if (player == null
+                        || !player.IsValid)
                     {
-                        _ = player.GiveNamedItem(kvp.Key);
+                        return;
                     }
-                }
+                    // give initial item(s)
+                    _ = player.GiveNamedItem("weapon_knife");
+                    // give loadout items
+                    foreach (KeyValuePair<string, int> kvp in loadout)
+                    {
+                        for (int i = 0; i < kvp.Value; i++)
+                        {
+                            _ = player.GiveNamedItem(kvp.Key);
+                        }
+                    }
+                });
             }
         }
 
