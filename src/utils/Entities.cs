@@ -1,7 +1,4 @@
-using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
-using CounterStrikeSharp.API.Modules.Memory;
-using System.Runtime.InteropServices;
 
 namespace LoadoutKeeper.Utils
 {
@@ -15,8 +12,8 @@ namespace LoadoutKeeper.Utils
             }
             try
             {
-                CCSWeaponBaseVData? vdata = weapon.GetVData<CCSWeaponBaseVData>()!;
-                return Utilities.ReadStringUtf8(Marshal.ReadIntPtr(Schema.GetSchemaValue<nint>(vdata.Handle, "CCSWeaponBaseVData", "m_szName"), 0x10) + 0x10);
+                CCSWeaponBaseVData? vdata = weapon.GetVData<CCSWeaponBaseVData>();
+                return vdata?.Name ?? null;
             }
             catch
             {

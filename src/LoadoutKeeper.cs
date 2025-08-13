@@ -223,7 +223,8 @@ namespace LoadoutKeeper
                         continue;
                     }
                     // get weapon name
-                    if (playerWeapon.DesignerName.Contains("c4", StringComparison.OrdinalIgnoreCase))
+                    string? weaponName = Entities.PlayerWeaponName(playerWeapon);
+                    if (weaponName != null && weaponName.Contains("c4", StringComparison.OrdinalIgnoreCase))
                     {
                         hasBomb = true;
                         break;
@@ -298,35 +299,34 @@ namespace LoadoutKeeper
                 {
                     _ = value.Remove(weapon);
                 }
-                // TODO: wait for update on offset for detecting m4a1_silencer
                 // check if m4a1 or m4a1_silencer was selected (both report back as m4a1 unfortunately)
-                //if (Item.Equals("m4a1", StringComparison.OrdinalIgnoreCase))
-                //{
-                //    foreach (CHandle<CBasePlayerWeapon> weaponHandle in player.Pawn.Value.WeaponServices.MyWeapons)
-                //    {
-                //        // skip invalid weapon handles
-                //        if (weaponHandle == null
-                //            || !weaponHandle.IsValid)
-                //        {
-                //            continue;
-                //        }
-                //        // get weapon from handle
-                //        CBasePlayerWeapon? playerWeapon = weaponHandle.Value;
-                //        // skip invalid weapon
-                //        if (playerWeapon == null
-                //            || !playerWeapon.IsValid)
-                //        {
-                //            continue;
-                //        }
-                //        // get weapon name
-                //        string? weaponName = Entities.PlayerWeaponName(playerWeapon);
-                //        if (weaponName != null && weaponName.Contains("m4a1", StringComparison.OrdinalIgnoreCase))
-                //        {
-                //            _primaryWeapon = weaponName;
-                //            break;
-                //        }
-                //    }
-                //}
+                if (Item.Equals("m4a1", StringComparison.OrdinalIgnoreCase))
+                {
+                    foreach (CHandle<CBasePlayerWeapon> weaponHandle in player.Pawn.Value.WeaponServices.MyWeapons)
+                    {
+                        // skip invalid weapon handles
+                        if (weaponHandle == null
+                            || !weaponHandle.IsValid)
+                        {
+                            continue;
+                        }
+                        // get weapon from handle
+                        CBasePlayerWeapon? playerWeapon = weaponHandle.Value;
+                        // skip invalid weapon
+                        if (playerWeapon == null
+                            || !playerWeapon.IsValid)
+                        {
+                            continue;
+                        }
+                        // get weapon name
+                        string? weaponName = Entities.PlayerWeaponName(playerWeapon);
+                        if (weaponName != null && weaponName.Contains("m4a1", StringComparison.OrdinalIgnoreCase))
+                        {
+                            _primaryWeapon = weaponName;
+                            break;
+                        }
+                    }
+                }
 
                 value[_primaryWeapon] = 1;
             }
