@@ -7,9 +7,11 @@ namespace LoadoutKeeper
 {
     public class PluginConfig : BasePluginConfig
     {
-        // disabled
+        // whether the plugin is enabled or not
         [JsonPropertyName("enabled")] public bool Enabled { get; set; } = true;
-        // announce loadout given
+        // whether or not to give grenades to players (optional because people need to drop them to be able to buy new ones if they wanted)
+        [JsonPropertyName("give_grenades")] public bool GiveGrenades { get; set; } = false;
+        // announcements
         [JsonPropertyName("announce_loadout_given_chat")] public bool AnnounceLoadoutGivenChat { get; set; } = true;
         [JsonPropertyName("announce_loadout_given_center")] public bool AnnounceLoadoutGivenCenter { get; set; } = false;
         [JsonPropertyName("announce_loadout_given_center_alert")] public bool AnnounceLoadoutGivenCenterAlert { get; set; } = true;
