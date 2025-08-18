@@ -202,10 +202,10 @@ namespace LoadoutKeeper
             {
                 return;
             }
+            // get player loadout
             if (_loadouts.TryGetValue(player.SteamID, out Dictionary<string, int>? loadout) && loadout.Count > 0)
             {
-                bool hasBomb = false;
-                // check if player has the bomb
+                // remove all non-essential items from player loadout
                 foreach (CHandle<CBasePlayerWeapon> weaponHandle in player.Pawn.Value.WeaponServices.MyWeapons)
                 {
                     // skip invalid weapon handles
@@ -222,16 +222,21 @@ namespace LoadoutKeeper
                     {
                         continue;
                     }
-                    // get weapon name
+                    // ignore specific weapons
                     string? weaponName = Entities.PlayerWeaponName(playerWeapon);
-                    if (weaponName != null && weaponName.Contains("c4", StringComparison.OrdinalIgnoreCase))
+                    if (weaponName != null
+                    && weaponName.Contains("c4", StringComparison.OrdinalIgnoreCase)
+                    && weaponName.Contains("knife", StringComparison.OrdinalIgnoreCase))
                     {
-                        hasBomb = true;
-                        break;
+                        continue;
                     }
+                    // set weapon as currently active weapon
+                    player.Pawn.Value.WeaponServices.ActiveWeapon.Raw = weaponHandle.Raw;
+                    // drop active weapon
+                    player.DropActiveWeapon();
+                    // delete weapon entity
+                    playerWeapon.AddEntityIOEvent("Kill", playerWeapon, null, "", 0.1f);
                 }
-                // remove old loadout
-                player.RemoveWeapons();
                 // wait for next frame to ensure player has been updated properly
                 Server.NextFrame(() =>
                 {
@@ -240,12 +245,6 @@ namespace LoadoutKeeper
                         || !player.IsValid)
                     {
                         return;
-                    }
-                    // give initial item(s)
-                    _ = player.GiveNamedItem("weapon_knife");
-                    if (hasBomb)
-                    {
-                        _ = player.GiveNamedItem("weapon_c4");
                     }
                     // give loadout items
                     foreach (KeyValuePair<string, int> kvp in loadout)
