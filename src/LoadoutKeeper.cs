@@ -250,6 +250,11 @@ namespace LoadoutKeeper
                     // give loadout items
                     foreach (KeyValuePair<string, int> kvp in loadout)
                     {
+                        // skip grenades if not enabled in config
+                        if (!Config.GiveGrenades && _grenades.Contains(kvp.Key))
+                        {
+                            continue;
+                        }
                         for (int i = 0; i < kvp.Value; i++)
                         {
                             _ = player.GiveNamedItem(kvp.Key);
@@ -339,7 +344,7 @@ namespace LoadoutKeeper
                 }
                 _loadouts[player.SteamID][_secondaryWeapon] = 1;
             }
-            else if (_grenade != null && Config.GiveGrenades)
+            else if (_grenade != null)
             {
                 // Only add grenade if not already present
                 if (!_loadouts[player.SteamID].ContainsKey(_grenade))
