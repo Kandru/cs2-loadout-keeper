@@ -158,19 +158,24 @@ namespace LoadoutKeeper
             }
             // give loadout to player
             Server.NextFrame(() => GivePlayerLoadout(player));
+            // reset buy menu loadout if enabled in config
+            if (Config.ResetBuyMenuLoadout)
+            {
+                Players.ResetBuyMenuLoadout(player);
+            }
             // remove player from cooldown list after a short delay
             _ = AddTimer(0.1f, () =>
+        {
+            if (player == null
+            || !player.IsValid)
             {
-                if (player == null
-                || !player.IsValid)
-                {
-                    return;
-                }
-                if (_spawnCooldowns.Contains(player))
-                {
-                    _ = _spawnCooldowns.Remove(player);
-                }
-            });
+                return;
+            }
+            if (_spawnCooldowns.Contains(player))
+            {
+                _ = _spawnCooldowns.Remove(player);
+            }
+        });
             return HookResult.Continue;
         }
 

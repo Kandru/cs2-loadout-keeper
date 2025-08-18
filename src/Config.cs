@@ -11,6 +11,8 @@ namespace LoadoutKeeper
         [JsonPropertyName("enabled")] public bool Enabled { get; set; } = true;
         // whether or not to give grenades to players (optional because people need to drop them to be able to buy new ones if they wanted)
         [JsonPropertyName("give_grenades")] public bool GiveGrenades { get; set; } = false;
+        // whether or not to reset the weapon purchases inside of the buy menu after respawn (allows to buy all weapons again)
+        [JsonPropertyName("reset_buy_menu_loadout")] public bool ResetBuyMenuLoadout { get; set; } = true;
         // announcements
         [JsonPropertyName("announce_loadout_given_chat")] public bool AnnounceLoadoutGivenChat { get; set; } = true;
         [JsonPropertyName("announce_loadout_given_center")] public bool AnnounceLoadoutGivenCenter { get; set; } = false;
