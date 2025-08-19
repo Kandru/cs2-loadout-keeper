@@ -1,5 +1,6 @@
 using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
+using CounterStrikeSharp.API.Modules.Entities.Constants;
 using CounterStrikeSharp.API.Modules.Utils;
 using LoadoutKeeper.Utils;
 
@@ -64,6 +65,18 @@ namespace LoadoutKeeper
             //"item_assaultsuit",
             //"item_defuser",
             //"item_kevlar"
+        ];
+
+        private readonly List<string> _itemsToKeep = [
+            "knife",
+            "c4",
+            CsItem.C4.ToString(),
+            CsItem.Bomb.ToString(),
+            CsItem.Knife.ToString(),
+            CsItem.KnifeT.ToString(),
+            CsItem.KnifeCT.ToString(),
+            CsItem.DefaultKnifeT.ToString(),
+            CsItem.DefaultKnifeCT.ToString()
         ];
 
         public override void Load(bool hotReload)
@@ -230,8 +243,7 @@ namespace LoadoutKeeper
                     // ignore specific weapons
                     string? weaponName = Entities.PlayerWeaponName(playerWeapon);
                     if (weaponName != null
-                    && weaponName.Contains("c4", StringComparison.OrdinalIgnoreCase)
-                    && weaponName.Contains("knife", StringComparison.OrdinalIgnoreCase))
+                        && _itemsToKeep.Any(item => weaponName.Contains(item, StringComparison.OrdinalIgnoreCase)))
                     {
                         continue;
                     }
