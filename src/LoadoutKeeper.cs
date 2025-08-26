@@ -254,42 +254,32 @@ namespace LoadoutKeeper
                     // delete weapon entity
                     playerWeapon.AddEntityIOEvent("Kill", playerWeapon, null, "", 0.1f);
                 }
-                // wait for next frame to ensure player has been updated properly
-                Server.NextFrame(() =>
+                // give loadout items
+                foreach (KeyValuePair<string, int> kvp in loadout)
                 {
-                    // check if player is still valid
-                    if (player == null
-                        || !player.IsValid)
+                    // skip grenades if not enabled in config
+                    if (!Config.GiveGrenades && _grenades.Contains(kvp.Key))
                     {
-                        return;
+                        continue;
                     }
-                    // give loadout items
-                    foreach (KeyValuePair<string, int> kvp in loadout)
+                    for (int i = 0; i < kvp.Value; i++)
                     {
-                        // skip grenades if not enabled in config
-                        if (!Config.GiveGrenades && _grenades.Contains(kvp.Key))
-                        {
-                            continue;
-                        }
-                        for (int i = 0; i < kvp.Value; i++)
-                        {
-                            _ = player.GiveNamedItem(kvp.Key);
-                        }
+                        _ = player.GiveNamedItem(kvp.Key);
                     }
-                    // announcement
-                    if (Config.AnnounceLoadoutGivenChat)
-                    {
-                        player.PrintToChat(Localizer["loadout.given.chat"]);
-                    }
-                    if (Config.AnnounceLoadoutGivenCenter)
-                    {
-                        player.PrintToCenter(Localizer["loadout.given.center"]);
-                    }
-                    if (Config.AnnounceLoadoutGivenCenterAlert)
-                    {
-                        player.PrintToCenterAlert(Localizer["loadout.given.center"]);
-                    }
-                });
+                }
+                // announcement
+                if (Config.AnnounceLoadoutGivenChat)
+                {
+                    player.PrintToChat(Localizer["loadout.given.chat"]);
+                }
+                if (Config.AnnounceLoadoutGivenCenter)
+                {
+                    player.PrintToCenter(Localizer["loadout.given.center"]);
+                }
+                if (Config.AnnounceLoadoutGivenCenterAlert)
+                {
+                    player.PrintToCenterAlert(Localizer["loadout.given.center"]);
+                }
             }
         }
 
