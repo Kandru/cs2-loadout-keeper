@@ -1,5 +1,6 @@
 ﻿using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Modules.Extensions;
+using LoadoutKeeper.Enums;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
@@ -9,8 +10,8 @@ namespace LoadoutKeeper
     {
         // whether the plugin is enabled or not
         [JsonPropertyName("enabled")] public bool Enabled { get; set; } = true;
-        // whether or not to give grenades to players (optional because people need to drop them to be able to buy new ones if they wanted)
-        [JsonPropertyName("give_grenades")] public bool GiveGrenades { get; set; } = false;
+        // check which loadout to give on spawn per default
+        [JsonPropertyName("default_setting")] public string DefaultLoadoutType { get; set; } = "ALL";
         // whether or not to reset the weapon purchases inside of the buy menu after respawn (allows to buy all weapons again)
         [JsonPropertyName("reset_buy_menu_loadout")] public bool ResetBuyMenuLoadout { get; set; } = true;
         // announcements
@@ -18,6 +19,14 @@ namespace LoadoutKeeper
         [JsonPropertyName("announce_loadout_given_center")] public bool AnnounceLoadoutGivenCenter { get; set; } = false;
         [JsonPropertyName("announce_loadout_given_center_alert")] public bool AnnounceLoadoutGivenCenterAlert { get; set; } = true;
 
+    }
+
+    public class LoadoutConfig
+    {
+        // which loadout to give on spawn (defaults to PluginConfig.DefaultLoadoutType anyway)
+        [JsonPropertyName("loadout_type")] public string Type { get; set; } = "ALL";
+        // player loadout data
+        [JsonPropertyName("loadout_data")] public Dictionary<string, int> Weapons { get; set; } = [];
     }
 
     public partial class LoadoutKeeper : IPluginConfig<PluginConfig>
@@ -43,10 +52,10 @@ namespace LoadoutKeeper
                 _ = Directory.CreateDirectory(playerConfigPath);
             }
             // save player loadouts
-            foreach (KeyValuePair<ulong, Dictionary<string, int>> kvp in _loadouts)
+            foreach (KeyValuePair<ulong, LoadoutConfig> kvp in _loadouts)
             {
                 string jsonString = JsonSerializer.Serialize(kvp.Value, CachedJsonOptions);
-                File.WriteAllText(Path.Combine(playerConfigPath, $"{kvp.Key}.json"), jsonString);
+                File.WriteAllText(Path.Combine(playerConfigPath, $"v1_{kvp.Key}.json"), jsonString);
             }
         }
 
@@ -54,18 +63,19 @@ namespace LoadoutKeeper
         {
             string playerConfigPath = Path.Combine(
                 $"{Path.GetDirectoryName(Config.GetConfigPath())}/players/" ?? "./players/",
-                $"{SteamID}.json"
+                $"v1_{SteamID}.json"
             );
             // skip if player config file does not exist
             if (!File.Exists(playerConfigPath))
             {
+                _loadouts.Add(SteamID, new LoadoutConfig() { Type = Config.DefaultLoadoutType });
                 return;
             }
             // check if player loadout file exists and load it
             try
             {
                 string jsonString = File.ReadAllText(playerConfigPath);
-                Dictionary<string, int>? playerLoadout = JsonSerializer.Deserialize<Dictionary<string, int>>(jsonString, CachedJsonOptions);
+                LoadoutConfig? playerLoadout = JsonSerializer.Deserialize<LoadoutConfig>(jsonString, CachedJsonOptions);
                 if (playerLoadout != null)
                 {
                     _loadouts[SteamID] = playerLoadout;

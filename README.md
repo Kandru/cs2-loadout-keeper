@@ -24,6 +24,11 @@ This plugin automatically creates a readable JSON configuration file. This confi
 ```json
 {
   "enabled": true,
+  "default_setting": "ALL",
+  "reset_buy_menu_loadout": true,
+  "announce_loadout_given_chat": false,
+  "announce_loadout_given_center": false,
+  "announce_loadout_given_center_alert": false,
   "ConfigVersion": 1
 }
 ```
@@ -32,7 +37,15 @@ This plugin automatically creates a readable JSON configuration file. This confi
 
 Whether or not this plug-in is enabled.
 
+### default_setting
+
+The default type of weapons to save and give on respawn (every weapon_ key will be saved anyway but only the default_setting will be given to a player by default). Can be: ALL, WEAPONS, PRIMARY, SECONDARY, GRENADES OR ITEMS.
+
 ## Commands
+
+### !loadout / !la <all|weapons|primary|secondary|grenades|items>
+
+Either shows the player their current setting or allows them to change it.
 
 ### loadoutkeeper reload (server console only)
 
