@@ -14,7 +14,7 @@ namespace LoadoutKeeper
         public void CommandPluginAdmin(CCSPlayerController player, CommandInfo command)
         {
             string subCommand = command.GetArg(1);
-            switch (subCommand.ToLower())
+            switch (subCommand.ToLower(System.Globalization.CultureInfo.CurrentCulture))
             {
                 case "reload":
                     Config.Reload();
@@ -57,21 +57,21 @@ namespace LoadoutKeeper
             if (string.IsNullOrWhiteSpace(loadoutType))
             {
                 command.ReplyToCommand(Localizer["command.loadout.usage"].Value
-                    .Replace("{current}", _loadouts.ContainsKey(player.SteamID) ? _loadouts[player.SteamID].Type.ToString().ToLower() : Config.DefaultLoadoutType.ToString().ToLower()));
+                    .Replace("{current}", _loadouts.TryGetValue(player.SteamID, out LoadoutConfig? value) ? value.Type.ToString().ToLower(System.Globalization.CultureInfo.CurrentCulture) : Config.DefaultLoadoutType.ToString().ToLower(System.Globalization.CultureInfo.CurrentCulture)));
                 return;
             }
 
             // Try exact match first
-            if (Enum.TryParse<LoadoutTypes>(loadoutType.ToUpper(), out var exactMatch))
+            if (Enum.TryParse<LoadoutTypes>(loadoutType.ToUpper(System.Globalization.CultureInfo.CurrentCulture), out LoadoutTypes exactMatch))
             {
                 loadout = exactMatch;
             }
             else
             {
                 // Try partial match
-                var enumValues = Enum.GetValues<LoadoutTypes>();
-                var partialMatch = enumValues.FirstOrDefault(e => e.ToString().StartsWith(loadoutType.ToUpper(), StringComparison.OrdinalIgnoreCase));
-                if (partialMatch != default(LoadoutTypes))
+                LoadoutTypes[] enumValues = Enum.GetValues<LoadoutTypes>();
+                LoadoutTypes partialMatch = enumValues.FirstOrDefault(e => e.ToString().StartsWith(loadoutType.ToUpper(System.Globalization.CultureInfo.CurrentCulture), StringComparison.OrdinalIgnoreCase));
+                if (partialMatch != default)
                 {
                     loadout = partialMatch;
                 }
@@ -81,12 +81,12 @@ namespace LoadoutKeeper
             {
                 _loadouts[player.SteamID].Type = loadout.Value.ToString();
                 command.ReplyToCommand(Localizer["command.loadout.changed"].Value
-                    .Replace("{current}", loadout.Value.ToString().ToLower()));
+                    .Replace("{current}", loadout.Value.ToString().ToLower(System.Globalization.CultureInfo.CurrentCulture)));
             }
             else
             {
                 command.ReplyToCommand(Localizer["command.loadout.invalid"].Value
-                    .Replace("{type}", loadoutType.ToLower()));
+                    .Replace("{type}", loadoutType.ToLower(System.Globalization.CultureInfo.CurrentCulture)));
             }
         }
     }

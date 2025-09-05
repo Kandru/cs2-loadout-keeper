@@ -1,6 +1,5 @@
 ﻿using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Modules.Extensions;
-using LoadoutKeeper.Enums;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
