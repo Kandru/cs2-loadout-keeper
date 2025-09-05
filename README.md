@@ -41,6 +41,14 @@ Whether or not this plug-in is enabled.
 
 The default type of weapons to save and give on respawn (every weapon_ key will be saved anyway but only the default_setting will be given to a player by default). Can be: ALL, WEAPONS, PRIMARY, SECONDARY, GRENADES OR ITEMS.
 
+### reset_buy_menu_loadout
+
+Wether or not to reset the buy menu loadout history on respawn. Defaults to true. Otherwise players can not properly change their loadout if weapons are given.
+
+### announce_loadout_given_*
+
+How the player will be notified when loadout has been modified.
+
 ## Commands
 
 ### !loadout / !la <all|weapons|primary|secondary|grenades|items>
