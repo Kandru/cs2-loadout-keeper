@@ -292,7 +292,7 @@ namespace LoadoutKeeper
                             if (_primaryWeapons.Any(item => weaponName.Contains(item, StringComparison.OrdinalIgnoreCase))
                                 || _secondaryWeapons.Any(item => weaponName.Contains(item, StringComparison.OrdinalIgnoreCase))
                                 || _items.Any(item => weaponName.Contains(item, StringComparison.OrdinalIgnoreCase))
-                                || !Config.EnableGrenades)
+                                || (!Config.EnableGrenades && _grenades.Any(item => weaponName.Contains(item, StringComparison.OrdinalIgnoreCase))))
                             {
                                 continue;
                             }
@@ -307,6 +307,11 @@ namespace LoadoutKeeper
                             }
                             break;
                         case nameof(LoadoutTypes.ALL):
+                            if (!Config.EnableGrenades && _grenades.Any(item => weaponName.Contains(item, StringComparison.OrdinalIgnoreCase)))
+                            {
+                                continue;
+                            }
+                            break;
                         default:
                             break;
                     }
@@ -354,7 +359,7 @@ namespace LoadoutKeeper
                             if (_primaryWeapons.Any(item => kvp.Key.Contains(item, StringComparison.OrdinalIgnoreCase))
                                 || _secondaryWeapons.Any(item => kvp.Key.Contains(item, StringComparison.OrdinalIgnoreCase))
                                 || _items.Any(item => kvp.Key.Contains(item, StringComparison.OrdinalIgnoreCase))
-                                || !Config.EnableGrenades)
+                                || (!Config.EnableGrenades && _grenades.Any(item => kvp.Key.Contains(item, StringComparison.OrdinalIgnoreCase))))
                             {
                                 continue;
                             }
@@ -369,6 +374,11 @@ namespace LoadoutKeeper
                             }
                             break;
                         case nameof(LoadoutTypes.ALL):
+                            if (!Config.EnableGrenades && _grenades.Any(item => kvp.Key.Contains(item, StringComparison.OrdinalIgnoreCase)))
+                            {
+                                continue;
+                            }
+                            break;
                         default:
                             break;
                     }
