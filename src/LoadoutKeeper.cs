@@ -92,6 +92,7 @@ namespace LoadoutKeeper
             RegisterEventHandler<EventPlayerDisconnect>(OnPlayerDisconnect);
             RegisterEventHandler<EventPlayerSpawn>(OnPlayerSpawn);
             RegisterEventHandler<EventItemPickup>(OnItemPickup);
+            RegisterEventHandler<EventBotTakeover>(OnBotTakeover);
             RegisterEventHandler<EventPlayerChat>(OnPlayerChatCommand);
             if (hotReload)
             {
@@ -111,6 +112,7 @@ namespace LoadoutKeeper
             DeregisterEventHandler<EventPlayerDisconnect>(OnPlayerDisconnect);
             DeregisterEventHandler<EventPlayerSpawn>(OnPlayerSpawn);
             DeregisterEventHandler<EventItemPickup>(OnItemPickup);
+            DeregisterEventHandler<EventBotTakeover>(OnBotTakeover);
             DeregisterEventHandler<EventPlayerChat>(OnPlayerChatCommand);
             SaveConfigs();
         }
@@ -224,6 +226,22 @@ namespace LoadoutKeeper
                 // update player loadout after item pickup
                 UpdatePlayerLoadout(player, item);
             });
+            return HookResult.Continue;
+        }
+
+        private HookResult OnBotTakeover(EventBotTakeover @event, GameEventInfo info)
+        {
+            // TODO: weapons get remove but cannot be given again
+            CCSPlayerController? player = @event.Userid;
+            if (_isDisabledMapType
+                || !Config.GiveLoadoutOnBotTakeover
+                || player == null
+                || !player.IsValid
+                || !player.IsBot
+                || !Config.Enabled)
+            {
+                return HookResult.Continue;
+            }
             return HookResult.Continue;
         }
 
