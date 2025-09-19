@@ -2,6 +2,6 @@ namespace LoadoutKeeper
 {
     public partial class LoadoutKeeper
     {
-        public override string ModuleVersion => "1.1.3";
+        public override string ModuleVersion => "1.1.4";
     }
 }
