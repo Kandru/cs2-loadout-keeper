@@ -27,6 +27,10 @@ This plugin automatically creates a readable JSON configuration file. This confi
   "default_setting": "ALL",
   "enable_grenades": false,
   "reset_buy_menu_loadout": true,
+  "allow_chat_command_for_primary_weapons": true,
+  "primary_weapons_for_chat_command": [],
+  "allow_chat_command_for_secondary_weapons": true,
+  "secondary_weapons_for_chat_command": [],
   "announce_loadout_given_chat": false,
   "announce_loadout_given_center": false,
   "announce_loadout_given_center_alert": false,
@@ -53,6 +57,22 @@ Disabled by default. If a player gets grenades on spawn he could not re-buy them
 ### reset_buy_menu_loadout
 
 Wether or not to reset the buy menu loadout history on respawn. Defaults to true. Otherwise players can not properly change their loadout if weapons are given.
+
+### allow_chat_command_for_primary_weapons
+
+Whether or not primary weapons can be acquired via !m4 or similar at any given time if alive.
+
+### primary_weapons_for_chat_command
+
+List of allowed primary weapons. Needs to be the whole weapons string e.g. "weapon_m4a1". If empty every weapon is allowed.
+
+### allow_chat_command_for_secondary_weapons
+
+Whether or not secondary weapons can be acquired via !deagle or similar at any given time if alive.
+
+### secondary_weapons_for_chat_command
+
+List of allowed secondary weapons. Needs to be the whole weapons string e.g. "weapon_deagle". If empty every weapon is allowed.
 
 ### announce_loadout_given_*
 

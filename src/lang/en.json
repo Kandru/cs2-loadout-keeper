@@ -3,6 +3,7 @@
     "core.config": "[LoadoutKeeper] Configuration loaded",
     "loadout.given.chat": "[LoadoutKeeper] Loadout has been given :)",
     "loadout.given.center": "enjoy your loadout <3",
+    "loadout.given.custom": "[LoadoutKeeper] {default}Here's your {green}{name}{default}!",
     "admin.unknown_command": "[LoadoutKeeper] Unknown command: {command}",
     "admin.reload": "[LoadoutKeeper] Configuration reloaded",
     "admin.enabled": "[LoadoutKeeper] LoadoutKeeper is now enabled",

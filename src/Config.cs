@@ -15,10 +15,19 @@ namespace LoadoutKeeper
         [JsonPropertyName("enable_grenades")] public bool EnableGrenades { get; set; } = false;
         // whether or not to reset the weapon purchases inside of the buy menu after respawn (allows to buy all weapons again)
         [JsonPropertyName("reset_buy_menu_loadout")] public bool ResetBuyMenuLoadout { get; set; } = true;
+        // whether or not to allow players to get their primary loadout via chat command
+        [JsonPropertyName("allow_chat_command_for_primary_weapons")] public bool AllowChatCommandForPrimaryWeapons { get; set; } = true;
+        // list of enabled primary weapons for chat command (case insensitive)
+        [JsonPropertyName("primary_weapons_for_chat_command")] public List<string> AllowedChatCommandPrimaryWeapons { get; set; } = [];
+        // whether or not to allow players to get their secondary loadout via chat command
+        [JsonPropertyName("allow_chat_command_for_secondary_weapons")] public bool AllowChatCommandForSecondaryWeapons { get; set; } = true;
+        // list of enabled secondary weapons for chat command (case insensitive)
+        [JsonPropertyName("secondary_weapons_for_chat_command")] public List<string> AllowedChatCommandSecondaryWeapons { get; set; } = [];
         // announcements
         [JsonPropertyName("announce_loadout_given_chat")] public bool AnnounceLoadoutGivenChat { get; set; } = true;
         [JsonPropertyName("announce_loadout_given_center")] public bool AnnounceLoadoutGivenCenter { get; set; } = false;
         [JsonPropertyName("announce_loadout_given_center_alert")] public bool AnnounceLoadoutGivenCenterAlert { get; set; } = true;
+        // loadout keeper disabled on certain map types (prefixes, case insensitive)
         [JsonPropertyName("disabled_map_types")] public List<string> DisabledMapTypes { get; set; } = new() { "awp_", "aim_" };
 
     }

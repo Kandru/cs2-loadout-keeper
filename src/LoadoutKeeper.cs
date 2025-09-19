@@ -1,6 +1,7 @@
 using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Modules.Entities.Constants;
+using CounterStrikeSharp.API.Modules.Events;
 using CounterStrikeSharp.API.Modules.Utils;
 using LoadoutKeeper.Enums;
 using LoadoutKeeper.Utils;
@@ -91,6 +92,7 @@ namespace LoadoutKeeper
             RegisterEventHandler<EventPlayerDisconnect>(OnPlayerDisconnect);
             RegisterEventHandler<EventPlayerSpawn>(OnPlayerSpawn);
             RegisterEventHandler<EventItemPickup>(OnItemPickup);
+            RegisterEventHandler<EventPlayerChat>(OnPlayerChatCommand);
             if (hotReload)
             {
                 foreach (CCSPlayerController entry in Utilities.GetPlayers().Where(static p => !p.IsBot))
@@ -109,6 +111,7 @@ namespace LoadoutKeeper
             DeregisterEventHandler<EventPlayerDisconnect>(OnPlayerDisconnect);
             DeregisterEventHandler<EventPlayerSpawn>(OnPlayerSpawn);
             DeregisterEventHandler<EventItemPickup>(OnItemPickup);
+            DeregisterEventHandler<EventPlayerChat>(OnPlayerChatCommand);
             SaveConfigs();
         }
 
@@ -221,6 +224,110 @@ namespace LoadoutKeeper
                 // update player loadout after item pickup
                 UpdatePlayerLoadout(player, item);
             });
+            return HookResult.Continue;
+        }
+
+        private HookResult OnPlayerChatCommand(EventPlayerChat @event, GameEventInfo info)
+        {
+            // ignore if players cannot buy weapons via chat command
+            if (_isDisabledMapType
+                || (!Config.AllowChatCommandForPrimaryWeapons
+                && !Config.AllowChatCommandForSecondaryWeapons))
+            {
+                return HookResult.Continue;
+            }
+            CCSPlayerController? player = Utilities.GetPlayerFromUserid(@event.Userid);
+            if (player == null
+                || !player.IsValid
+                || player.Pawn?.Value?.WeaponServices == null
+                || player.Pawn?.Value?.LifeState != (byte)LifeState_t.LIFE_ALIVE)
+            {
+                return HookResult.Continue;
+            }
+            // check which weapon type was requested
+            string message = @event.Text.Trim();
+            // Remove non-alphanumeric characters and make lowercase
+            message = new string([.. message.Where(c => char.IsLetterOrDigit(c) || c == '_')]);
+            // check against allowed weapons from config (if any) or all known weapons
+            var allowedPrimary = Config.AllowedChatCommandPrimaryWeapons?.Count > 0
+                ? Config.AllowedChatCommandPrimaryWeapons
+                : _primaryWeapons;
+            var allowedSecondary = Config.AllowedChatCommandSecondaryWeapons?.Count > 0
+                ? Config.AllowedChatCommandSecondaryWeapons
+                : _secondaryWeapons;
+            bool isPrimary = allowedPrimary.Any(item => item.Contains(message, StringComparison.OrdinalIgnoreCase));
+            bool isSecondary = allowedSecondary.Any(item => item.Contains(message, StringComparison.OrdinalIgnoreCase));
+            // ignore if no valid weapon type was requested or if players cannot buy the requested weapon type
+            if (!isPrimary
+                && !isSecondary
+                || (isPrimary && !Config.AllowChatCommandForPrimaryWeapons)
+                || (isSecondary && !Config.AllowChatCommandForSecondaryWeapons))
+            {
+                return HookResult.Continue;
+            }
+            string? requestedWeapon = isPrimary
+                ? allowedPrimary.FirstOrDefault(w => w.Contains(message, StringComparison.OrdinalIgnoreCase))
+                : allowedSecondary.FirstOrDefault(w => w.Contains(message, StringComparison.OrdinalIgnoreCase));
+            // check if requested weapon is already in loadout
+            if (requestedWeapon == null
+                || (_loadouts.TryGetValue(player.SteamID, out LoadoutConfig? loadout)
+                    && loadout.Weapons.ContainsKey(requestedWeapon)))
+            {
+                return HookResult.Continue;
+            }
+            // remove weapon (if any) from loadout before giving new one
+            foreach (CHandle<CBasePlayerWeapon> weaponHandle in player.Pawn.Value.WeaponServices.MyWeapons)
+            {
+                // skip invalid weapon handles
+                if (weaponHandle == null
+                    || !weaponHandle.IsValid)
+                {
+                    continue;
+                }
+                // get weapon from handle
+                CBasePlayerWeapon? playerWeapon = weaponHandle.Value;
+                // skip invalid weapon
+                if (playerWeapon == null
+                    || !playerWeapon.IsValid)
+                {
+                    continue;
+                }
+                string? weaponName = Entities.PlayerWeaponName(playerWeapon);
+                if (weaponName == null)
+                {
+                    continue;
+                }
+                // ignore if not found in primary weapons
+                if (isPrimary && !allowedPrimary.Any(item => weaponName.Contains(item, StringComparison.OrdinalIgnoreCase)))
+                {
+                    continue;
+                }
+                // ignore if not found in secondary weapons
+                if (isSecondary && !allowedSecondary.Any(item => weaponName.Contains(item, StringComparison.OrdinalIgnoreCase)))
+                {
+                    continue;
+                }
+                // set weapon as currently active weapon
+                player.Pawn.Value.WeaponServices.ActiveWeapon.Raw = weaponHandle.Raw;
+                // drop active weapon
+                player.DropActiveWeapon();
+                // delete weapon entity
+                playerWeapon.AddEntityIOEvent("Kill", playerWeapon, null, "", 0.1f);
+            }
+            // give player the requested weapon
+            _ = player.GiveNamedItem(requestedWeapon);
+            UpdatePlayerLoadout(player, requestedWeapon);
+            // announcement
+            player.PrintToChat(Localizer["loadout.given.custom"].Value
+                .Replace("{name}", requestedWeapon.Replace("weapon_", "", StringComparison.OrdinalIgnoreCase), StringComparison.OrdinalIgnoreCase));
+            if (isPrimary)
+            {
+                player.ExecuteClientCommand("slot1");
+            }
+            else
+            {
+                player.ExecuteClientCommand("slot2");
+            }
             return HookResult.Continue;
         }
 
