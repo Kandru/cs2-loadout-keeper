@@ -67,6 +67,7 @@ namespace LoadoutKeeper
             "weapon_taser",
             //"item_assaultsuit",
             //"item_defuser",
+            "defuser",
             //"item_kevlar"
         ];
 
@@ -382,6 +383,21 @@ namespace LoadoutKeeper
                         default:
                             break;
                     }
+                    // give defuser to CTs (if selected) as item_defuser does not work properly
+                    if (kvp.Key.Equals("defuser", StringComparison.OrdinalIgnoreCase)
+                        && player.Team == CsTeam.CounterTerrorist)
+                    {
+                        if (player.Pawn?.Value?.ItemServices == null)
+                        {
+                            continue;
+                        }
+                        var itemServices = new CCSPlayer_ItemServices(player.Pawn.Value.ItemServices.Handle)
+                        {
+                            HasDefuser = true
+                        };
+                        continue;
+                    }
+                    // give amount of items
                     for (int i = 0; i < kvp.Value; i++)
                     {
                         _ = player.GiveNamedItem(kvp.Key);
