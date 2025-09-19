@@ -29,6 +29,10 @@ This plugin automatically creates a readable JSON configuration file. This confi
   "announce_loadout_given_chat": false,
   "announce_loadout_given_center": false,
   "announce_loadout_given_center_alert": false,
+  "disabled_map_types": [
+    "awp_",
+    "aim_"
+  ],
   "ConfigVersion": 1
 }
 ```
@@ -48,6 +52,10 @@ Wether or not to reset the buy menu loadout history on respawn. Defaults to true
 ### announce_loadout_given_*
 
 How the player will be notified when loadout has been modified.
+
+### disabled_map_types
+
+Map types this plug-in is disabled for. E.g. `aim_` will disable all aim_* maps (looks up the beginning of the map name in lower case). Can also be a full map name where this is disabled for.
 
 ## Commands
 

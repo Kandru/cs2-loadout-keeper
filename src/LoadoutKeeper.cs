@@ -12,6 +12,7 @@ namespace LoadoutKeeper
         public override string ModuleName => "CS2 LoadoutKeeper";
         public override string ModuleAuthor => "Kalle <kalle@kandru.de>";
 
+        private bool _isDisabledMapType = false;
         private readonly Dictionary<ulong, LoadoutConfig> _loadouts = [];
         private readonly List<CCSPlayerController> _spawnCooldowns = [];
         private readonly List<string> _primaryWeapons = [
@@ -83,6 +84,7 @@ namespace LoadoutKeeper
 
         public override void Load(bool hotReload)
         {
+            RegisterListener<Listeners.OnMapStart>(OnMapStart);
             RegisterListener<Listeners.OnMapEnd>(OnMapEnd);
             RegisterEventHandler<EventPlayerConnectFull>(OnPlayerConnect);
             RegisterEventHandler<EventPlayerDisconnect>(OnPlayerDisconnect);
@@ -100,12 +102,19 @@ namespace LoadoutKeeper
 
         public override void Unload(bool hotReload)
         {
+            RemoveListener<Listeners.OnMapStart>(OnMapStart);
             RemoveListener<Listeners.OnMapEnd>(OnMapEnd);
             DeregisterEventHandler<EventPlayerConnectFull>(OnPlayerConnect);
             DeregisterEventHandler<EventPlayerDisconnect>(OnPlayerDisconnect);
             DeregisterEventHandler<EventPlayerSpawn>(OnPlayerSpawn);
             DeregisterEventHandler<EventItemPickup>(OnItemPickup);
             SaveConfigs();
+        }
+
+        private void OnMapStart(string mapName)
+        {
+            // check if map type is disabled
+            _isDisabledMapType = Config.DisabledMapTypes.Any(type => mapName.StartsWith(type, StringComparison.CurrentCultureIgnoreCase) || mapName.Equals(type, StringComparison.OrdinalIgnoreCase));
         }
 
         private void OnMapEnd()
@@ -121,8 +130,7 @@ namespace LoadoutKeeper
             if (player == null
                 || !player.IsValid
                 || player.IsBot
-                || player.IsHLTV
-                || !Config.Enabled)
+                || player.IsHLTV)
             {
                 return HookResult.Continue;
             }
@@ -139,8 +147,7 @@ namespace LoadoutKeeper
             CCSPlayerController? player = @event.Userid;
             if (player == null
                 || !player.IsValid
-                || player.IsBot
-                || !Config.Enabled)
+                || player.IsBot)
             {
                 return HookResult.Continue;
             }
@@ -162,7 +169,8 @@ namespace LoadoutKeeper
                 || !player.IsValid
                 || player.IsBot
                 || player.Team == CsTeam.None
-                || !Config.Enabled)
+                || !Config.Enabled
+                || _isDisabledMapType)
             {
                 return HookResult.Continue;
             }
@@ -201,6 +209,7 @@ namespace LoadoutKeeper
                 || !player.IsValid
                 || player.IsBot
                 || !Config.Enabled
+                || _isDisabledMapType
                 || _spawnCooldowns.Contains(player))
             {
                 return HookResult.Continue;

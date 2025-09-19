@@ -17,6 +17,7 @@ namespace LoadoutKeeper
         [JsonPropertyName("announce_loadout_given_chat")] public bool AnnounceLoadoutGivenChat { get; set; } = true;
         [JsonPropertyName("announce_loadout_given_center")] public bool AnnounceLoadoutGivenCenter { get; set; } = false;
         [JsonPropertyName("announce_loadout_given_center_alert")] public bool AnnounceLoadoutGivenCenterAlert { get; set; } = true;
+        [JsonPropertyName("disabled_map_types")] public List<string> DisabledMapTypes { get; set; } = new() { "awp_", "aim_" };
 
     }
 
