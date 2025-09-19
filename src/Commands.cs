@@ -56,8 +56,14 @@ namespace LoadoutKeeper
             // check if loadoutType is omitted
             if (string.IsNullOrWhiteSpace(loadoutType))
             {
+                if (Config.EnableGrenades)
+                {
+                    command.ReplyToCommand(Localizer["command.loadout.usage_with_grenades"].Value
+                        .Replace("{current}", _loadouts.TryGetValue(player.SteamID, out LoadoutConfig? value1) ? value1.Type.ToString().ToLower(System.Globalization.CultureInfo.CurrentCulture) : Config.DefaultLoadoutType.ToString().ToLower(System.Globalization.CultureInfo.CurrentCulture)));
+                    return;
+                }
                 command.ReplyToCommand(Localizer["command.loadout.usage"].Value
-                    .Replace("{current}", _loadouts.TryGetValue(player.SteamID, out LoadoutConfig? value) ? value.Type.ToString().ToLower(System.Globalization.CultureInfo.CurrentCulture) : Config.DefaultLoadoutType.ToString().ToLower(System.Globalization.CultureInfo.CurrentCulture)));
+                    .Replace("{current}", _loadouts.TryGetValue(player.SteamID, out LoadoutConfig? value2) ? value2.Type.ToString().ToLower(System.Globalization.CultureInfo.CurrentCulture) : Config.DefaultLoadoutType.ToString().ToLower(System.Globalization.CultureInfo.CurrentCulture)));
                 return;
             }
 

@@ -9,5 +9,6 @@
     "admin.disabled": "[LoadoutKeeper] LoadoutKeeper ist jetzt deaktiviert",
     "command.loadout.invalid": "[LoadoutKeeper] Ungültiger Loadout-Typ: {type}. Gültige Typen sind: all, weapons, primary, secondary, grenades, items",
     "command.loadout.usage": "[LoadoutKeeper] Aktuell: {current}. Verwendung: !la <all|weapons|primary|secondary|grenades|items>",
+    "command.loadout.usage_with_grenades": "[LoadoutKeeper] Aktuell: {current}. Verwendung: !la <all|weapons|primary|secondary|items>",
     "command.loadout.changed": "[LoadoutKeeper] Loadout-Typ geändert zu: {current}"
 }

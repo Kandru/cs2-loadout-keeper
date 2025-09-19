@@ -25,6 +25,7 @@ This plugin automatically creates a readable JSON configuration file. This confi
 {
   "enabled": true,
   "default_setting": "ALL",
+  "enable_grenades": false,
   "reset_buy_menu_loadout": true,
   "announce_loadout_given_chat": false,
   "announce_loadout_given_center": false,
@@ -44,6 +45,10 @@ Whether or not this plug-in is enabled.
 ### default_setting
 
 The default type of weapons to save and give on respawn (every weapon_ key will be saved anyway but only the default_setting will be given to a player by default). Can be: ALL, WEAPONS, PRIMARY, SECONDARY, GRENADES OR ITEMS.
+
+### enable_grenades
+
+Disabled by default. If a player gets grenades on spawn he could not re-buy them in the buy menu if the maximum allowed types for a grenade have been reached... not fix known currently.
 
 ### reset_buy_menu_loadout
 

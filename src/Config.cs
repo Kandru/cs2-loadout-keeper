@@ -11,6 +11,8 @@ namespace LoadoutKeeper
         [JsonPropertyName("enabled")] public bool Enabled { get; set; } = true;
         // check which loadout to give on spawn per default
         [JsonPropertyName("default_setting")] public string DefaultLoadoutType { get; set; } = "ALL";
+        // whether or not giving grenades is enabled (bugs out due to unable to buy other grenades in the buy menu if grenades are given on spawn)
+        [JsonPropertyName("enable_grenades")] public bool EnableGrenades { get; set; } = false;
         // whether or not to reset the weapon purchases inside of the buy menu after respawn (allows to buy all weapons again)
         [JsonPropertyName("reset_buy_menu_loadout")] public bool ResetBuyMenuLoadout { get; set; } = true;
         // announcements

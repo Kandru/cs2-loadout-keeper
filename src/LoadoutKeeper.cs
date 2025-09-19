@@ -291,7 +291,8 @@ namespace LoadoutKeeper
                             // do ignore weapons which are NOT grenades
                             if (_primaryWeapons.Any(item => weaponName.Contains(item, StringComparison.OrdinalIgnoreCase))
                                 || _secondaryWeapons.Any(item => weaponName.Contains(item, StringComparison.OrdinalIgnoreCase))
-                                || _items.Any(item => weaponName.Contains(item, StringComparison.OrdinalIgnoreCase)))
+                                || _items.Any(item => weaponName.Contains(item, StringComparison.OrdinalIgnoreCase))
+                                || !Config.EnableGrenades)
                             {
                                 continue;
                             }
@@ -352,7 +353,8 @@ namespace LoadoutKeeper
                             // do ignore weapons which are NOT grenades
                             if (_primaryWeapons.Any(item => kvp.Key.Contains(item, StringComparison.OrdinalIgnoreCase))
                                 || _secondaryWeapons.Any(item => kvp.Key.Contains(item, StringComparison.OrdinalIgnoreCase))
-                                || _items.Any(item => kvp.Key.Contains(item, StringComparison.OrdinalIgnoreCase)))
+                                || _items.Any(item => kvp.Key.Contains(item, StringComparison.OrdinalIgnoreCase))
+                                || !Config.EnableGrenades)
                             {
                                 continue;
                             }
