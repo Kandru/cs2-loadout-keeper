@@ -232,16 +232,22 @@ namespace LoadoutKeeper
         private HookResult OnBotTakeover(EventBotTakeover @event, GameEventInfo info)
         {
             // TODO: weapons get remove but cannot be given again
-            CCSPlayerController? player = @event.Userid;
+            CCSPlayerController? player = @event?.Userid;
+            CCSPlayerController? bot = Utilities.GetPlayerFromIndex((int)(player?.ObserverPawn?.Value?.Controller?.Value?.Index ?? 0));
             if (_isDisabledMapType
                 || !Config.GiveLoadoutOnBotTakeover
                 || player == null
                 || !player.IsValid
-                || !player.IsBot
+                || player.IsBot
+                || bot == null
+                || !bot.IsValid
+                || !bot.IsBot
                 || !Config.Enabled)
             {
                 return HookResult.Continue;
             }
+            // get bot from players
+            //GivePlayerLoadout(bot);
             return HookResult.Continue;
         }
 
