@@ -15,8 +15,10 @@ namespace LoadoutKeeper
 
         private bool _isDisabledMapType = false;
         private readonly Dictionary<ulong, LoadoutConfig> _loadouts = [];
-        private readonly List<CCSPlayerController> _spawnCooldowns = [];
-        private readonly List<string> _primaryWeapons = [
+        private readonly HashSet<CCSPlayerController> _spawnCooldowns = [];
+
+        private readonly HashSet<string> _primaryWeapons = new(StringComparer.OrdinalIgnoreCase)
+        {
             "weapon_ak47",
             "weapon_aug",
             "weapon_awp",
@@ -41,8 +43,9 @@ namespace LoadoutKeeper
             "weapon_ssg08",
             "weapon_ump45",
             "weapon_xm1014"
-        ];
-        private readonly List<string> _secondaryWeapons = [
+        };
+        private readonly HashSet<string> _secondaryWeapons = new(StringComparer.OrdinalIgnoreCase)
+        {
             "weapon_cz75a",
             "weapon_deagle",
             "weapon_elite",
@@ -53,26 +56,26 @@ namespace LoadoutKeeper
             "weapon_tec9",
             "weapon_usp_silencer",
             "weapon_hkp2000"
-        ];
+        };
 
-        private readonly List<string> _grenades = [
+        private readonly HashSet<string> _grenades = new(StringComparer.OrdinalIgnoreCase)
+        {
             "weapon_flashbang",
             "weapon_hegrenade",
             "weapon_incgrenade",
             "weapon_molotov",
             "weapon_smokegrenade",
             "weapon_decoy"
-        ];
+        };
 
-        private readonly List<string> _items = [
+        private readonly HashSet<string> _items = new(StringComparer.OrdinalIgnoreCase)
+        {
             "weapon_taser",
-            //"item_assaultsuit",
-            //"item_defuser",
-            "defuser",
-            //"item_kevlar"
-        ];
+            "defuser"
+        };
 
-        private readonly List<string> _itemsToKeep = [
+        private readonly HashSet<string> _itemsToKeep = new(StringComparer.OrdinalIgnoreCase)
+        {
             "knife",
             "c4",
             CsItem.C4.ToString(),
@@ -82,7 +85,26 @@ namespace LoadoutKeeper
             CsItem.KnifeCT.ToString(),
             CsItem.DefaultKnifeT.ToString(),
             CsItem.DefaultKnifeCT.ToString()
-        ];
+        };
+
+        private bool ShouldRemoveWeapon(string weaponName, LoadoutTypes loadoutType)
+        {
+            return loadoutType switch
+            {
+                LoadoutTypes.WEAPONS => _grenades.Any(item => weaponName.Contains(item, StringComparison.OrdinalIgnoreCase)) || _items.Any(item => weaponName.Contains(item, StringComparison.OrdinalIgnoreCase)),
+                LoadoutTypes.PRIMARY => _secondaryWeapons.Any(item => weaponName.Contains(item, StringComparison.OrdinalIgnoreCase)) || _grenades.Any(item => weaponName.Contains(item, StringComparison.OrdinalIgnoreCase)) || _items.Any(item => weaponName.Contains(item, StringComparison.OrdinalIgnoreCase)),
+                LoadoutTypes.SECONDARY => _primaryWeapons.Any(item => weaponName.Contains(item, StringComparison.OrdinalIgnoreCase)) || _grenades.Any(item => weaponName.Contains(item, StringComparison.OrdinalIgnoreCase)) || _items.Any(item => weaponName.Contains(item, StringComparison.OrdinalIgnoreCase)),
+                LoadoutTypes.GRENADES => _primaryWeapons.Any(item => weaponName.Contains(item, StringComparison.OrdinalIgnoreCase)) || _secondaryWeapons.Any(item => weaponName.Contains(item, StringComparison.OrdinalIgnoreCase)) || _items.Any(item => weaponName.Contains(item, StringComparison.OrdinalIgnoreCase)) || (!Config.EnableGrenades && _grenades.Any(item => weaponName.Contains(item, StringComparison.OrdinalIgnoreCase))),
+                LoadoutTypes.ITEMS => _primaryWeapons.Any(item => weaponName.Contains(item, StringComparison.OrdinalIgnoreCase)) || _secondaryWeapons.Any(item => weaponName.Contains(item, StringComparison.OrdinalIgnoreCase)) || _grenades.Any(item => weaponName.Contains(item, StringComparison.OrdinalIgnoreCase)),
+                LoadoutTypes.ALL => !Config.EnableGrenades && _grenades.Any(item => weaponName.Contains(item, StringComparison.OrdinalIgnoreCase)),
+                _ => false
+            };
+        }
+
+        private string? FindWeaponInCategory(string item, HashSet<string> category)
+        {
+            return category.FirstOrDefault(w => w.Contains(item, StringComparison.OrdinalIgnoreCase));
+        }
 
         public override void Load(bool hotReload)
         {
@@ -98,7 +120,6 @@ namespace LoadoutKeeper
             {
                 foreach (CCSPlayerController entry in Utilities.GetPlayers().Where(static p => !p.IsBot))
                 {
-                    // update player loadout
                     LoadConfig(entry.SteamID);
                 }
             }
@@ -163,8 +184,7 @@ namespace LoadoutKeeper
                 SaveConfigs();
                 _loadouts.Clear();
             }
-            // remove player from cooldown list
-            _ = _spawnCooldowns.Remove(player);
+            _spawnCooldowns.Remove(player);
             return HookResult.Continue;
         }
 
@@ -192,19 +212,13 @@ namespace LoadoutKeeper
             {
                 Players.ResetBuyMenuLoadout(player);
             }
-            // remove player from cooldown list after a short delay
-            _ = AddTimer(0.1f, () =>
-        {
-            if (player == null
-            || !player.IsValid)
+            AddTimer(0.1f, () =>
             {
-                return;
-            }
-            if (_spawnCooldowns.Contains(player))
-            {
-                _ = _spawnCooldowns.Remove(player);
-            }
-        });
+                if (player?.IsValid == true)
+                {
+                    _spawnCooldowns.Remove(player);
+                }
+            });
             return HookResult.Continue;
         }
 
@@ -280,11 +294,10 @@ namespace LoadoutKeeper
             }
             // Remove non-alphanumeric characters and make lowercase
             message = new string([.. message.Where(c => char.IsLetterOrDigit(c) || c == '_')]);
-            // check against allowed weapons from config (if any) or all known weapons
-            List<string> allowedPrimary = Config.AllowedChatCommandPrimaryWeapons?.Count > 0
+            IEnumerable<string> allowedPrimary = Config.AllowedChatCommandPrimaryWeapons?.Count > 0
                 ? Config.AllowedChatCommandPrimaryWeapons
                 : _primaryWeapons;
-            List<string> allowedSecondary = Config.AllowedChatCommandSecondaryWeapons?.Count > 0
+            IEnumerable<string> allowedSecondary = Config.AllowedChatCommandSecondaryWeapons?.Count > 0
                 ? Config.AllowedChatCommandSecondaryWeapons
                 : _secondaryWeapons;
             bool isPrimary = allowedPrimary.Any(item => item.Contains(message, StringComparison.OrdinalIgnoreCase));
@@ -363,294 +376,181 @@ namespace LoadoutKeeper
 
         private void GivePlayerLoadout(CCSPlayerController player)
         {
-            if (player == null
-                || !player.IsValid
-                || player.Pawn?.Value?.WeaponServices == null)
+            if (player?.IsValid != true || player.Pawn?.Value?.WeaponServices == null)
             {
                 return;
             }
-            // get player loadout
-            if (_loadouts.TryGetValue(player.SteamID, out LoadoutConfig? loadout) && loadout.Weapons.Count > 0)
+
+            if (!_loadouts.TryGetValue(player.SteamID, out LoadoutConfig? loadout) || loadout.Weapons.Count == 0)
             {
-                // remove all non-essential items from player loadout
-                foreach (CHandle<CBasePlayerWeapon> weaponHandle in player.Pawn.Value.WeaponServices.MyWeapons)
+                return;
+            }
+
+            if (!Enum.TryParse(loadout.Type, out LoadoutTypes loadoutType))
+            {
+                return;
+            }
+
+            RemoveCurrentWeapons(player, loadoutType);
+            GiveLoadoutWeapons(player, loadout, loadoutType);
+            AnnounceLoadout(player);
+        }
+
+        private void RemoveCurrentWeapons(CCSPlayerController player, LoadoutTypes loadoutType)
+        {
+            if (player.Pawn?.Value?.WeaponServices == null)
+            {
+                return;
+            }
+
+            foreach (CHandle<CBasePlayerWeapon> weaponHandle in player.Pawn.Value.WeaponServices.MyWeapons)
+            {
+                if (weaponHandle?.Value is not CBasePlayerWeapon playerWeapon || !playerWeapon.IsValid)
                 {
-                    // skip invalid weapon handles
-                    if (weaponHandle == null
-                        || !weaponHandle.IsValid)
-                    {
-                        continue;
-                    }
-                    // get weapon from handle
-                    CBasePlayerWeapon? playerWeapon = weaponHandle.Value;
-                    // skip invalid weapon
-                    if (playerWeapon == null
-                        || !playerWeapon.IsValid)
-                    {
-                        continue;
-                    }
-                    // ignore specific weapons
-                    string? weaponName = Entities.PlayerWeaponName(playerWeapon);
-                    if (weaponName == null
-                        || _itemsToKeep.Any(item => weaponName.Contains(item, StringComparison.OrdinalIgnoreCase)))
-                    {
-                        continue;
-                    }
-                    // ignore weapons if player wished so
-                    switch (loadout.Type)
-                    {
-                        case nameof(LoadoutTypes.WEAPONS):
-                            // do ignore everything which is NOT a weapon
-                            if (_grenades.Any(item => weaponName.Contains(item, StringComparison.OrdinalIgnoreCase))
-                                || _items.Any(item => weaponName.Contains(item, StringComparison.OrdinalIgnoreCase)))
-                            {
-                                continue;
-                            }
-                            break;
-                        case nameof(LoadoutTypes.PRIMARY):
-                            // do ignore weapons which are NOT primary weapons
-                            if (_secondaryWeapons.Any(item => weaponName.Contains(item, StringComparison.OrdinalIgnoreCase))
-                                || _grenades.Any(item => weaponName.Contains(item, StringComparison.OrdinalIgnoreCase))
-                                || _items.Any(item => weaponName.Contains(item, StringComparison.OrdinalIgnoreCase)))
-                            {
-                                continue;
-                            }
-                            break;
-                        case nameof(LoadoutTypes.SECONDARY):
-                            // do ignore weapons which are NOT secondary weapons
-                            if (_primaryWeapons.Any(item => weaponName.Contains(item, StringComparison.OrdinalIgnoreCase))
-                                || _grenades.Any(item => weaponName.Contains(item, StringComparison.OrdinalIgnoreCase))
-                                || _items.Any(item => weaponName.Contains(item, StringComparison.OrdinalIgnoreCase)))
-                            {
-                                continue;
-                            }
-                            break;
-                        case nameof(LoadoutTypes.GRENADES):
-                            // do ignore weapons which are NOT grenades
-                            if (_primaryWeapons.Any(item => weaponName.Contains(item, StringComparison.OrdinalIgnoreCase))
-                                || _secondaryWeapons.Any(item => weaponName.Contains(item, StringComparison.OrdinalIgnoreCase))
-                                || _items.Any(item => weaponName.Contains(item, StringComparison.OrdinalIgnoreCase))
-                                || (!Config.EnableGrenades && _grenades.Any(item => weaponName.Contains(item, StringComparison.OrdinalIgnoreCase))))
-                            {
-                                continue;
-                            }
-                            break;
-                        case nameof(LoadoutTypes.ITEMS):
-                            // do ignore weapons which are NOT items
-                            if (_primaryWeapons.Any(item => weaponName.Contains(item, StringComparison.OrdinalIgnoreCase))
-                                || _secondaryWeapons.Any(item => weaponName.Contains(item, StringComparison.OrdinalIgnoreCase))
-                                || _grenades.Any(item => weaponName.Contains(item, StringComparison.OrdinalIgnoreCase)))
-                            {
-                                continue;
-                            }
-                            break;
-                        case nameof(LoadoutTypes.ALL):
-                            if (!Config.EnableGrenades && _grenades.Any(item => weaponName.Contains(item, StringComparison.OrdinalIgnoreCase)))
-                            {
-                                continue;
-                            }
-                            break;
-                        default:
-                            break;
-                    }
-                    // set weapon as currently active weapon
-                    player.Pawn.Value.WeaponServices.ActiveWeapon.Raw = weaponHandle.Raw;
-                    // drop active weapon
-                    player.DropActiveWeapon();
-                    // delete weapon entity
-                    playerWeapon.AddEntityIOEvent("Kill", playerWeapon, null, "", 0.1f);
+                    continue;
                 }
-                // give loadout items
-                foreach (KeyValuePair<string, int> kvp in loadout.Weapons)
+
+                string? weaponName = Entities.PlayerWeaponName(playerWeapon);
+                if (weaponName == null || _itemsToKeep.Any(item => weaponName.Contains(item, StringComparison.OrdinalIgnoreCase)) || ShouldRemoveWeapon(weaponName, loadoutType))
                 {
-                    // ignore weapons if player wished so
-                    switch (loadout.Type)
-                    {
-                        case nameof(LoadoutTypes.WEAPONS):
-                            // do ignore everything which is NOT a weapon
-                            if (_grenades.Any(item => kvp.Key.Contains(item, StringComparison.OrdinalIgnoreCase))
-                                || _items.Any(item => kvp.Key.Contains(item, StringComparison.OrdinalIgnoreCase)))
-                            {
-                                continue;
-                            }
-                            break;
-                        case nameof(LoadoutTypes.PRIMARY):
-                            // do ignore weapons which are NOT primary weapons
-                            if (_secondaryWeapons.Any(item => kvp.Key.Contains(item, StringComparison.OrdinalIgnoreCase))
-                                || _grenades.Any(item => kvp.Key.Contains(item, StringComparison.OrdinalIgnoreCase))
-                                || _items.Any(item => kvp.Key.Contains(item, StringComparison.OrdinalIgnoreCase)))
-                            {
-                                continue;
-                            }
-                            break;
-                        case nameof(LoadoutTypes.SECONDARY):
-                            // do ignore weapons which are NOT secondary weapons
-                            if (_primaryWeapons.Any(item => kvp.Key.Contains(item, StringComparison.OrdinalIgnoreCase))
-                                || _grenades.Any(item => kvp.Key.Contains(item, StringComparison.OrdinalIgnoreCase))
-                                || _items.Any(item => kvp.Key.Contains(item, StringComparison.OrdinalIgnoreCase)))
-                            {
-                                continue;
-                            }
-                            break;
-                        case nameof(LoadoutTypes.GRENADES):
-                            // do ignore weapons which are NOT grenades
-                            if (_primaryWeapons.Any(item => kvp.Key.Contains(item, StringComparison.OrdinalIgnoreCase))
-                                || _secondaryWeapons.Any(item => kvp.Key.Contains(item, StringComparison.OrdinalIgnoreCase))
-                                || _items.Any(item => kvp.Key.Contains(item, StringComparison.OrdinalIgnoreCase))
-                                || (!Config.EnableGrenades && _grenades.Any(item => kvp.Key.Contains(item, StringComparison.OrdinalIgnoreCase))))
-                            {
-                                continue;
-                            }
-                            break;
-                        case nameof(LoadoutTypes.ITEMS):
-                            // do ignore weapons which are NOT items
-                            if (_primaryWeapons.Any(item => kvp.Key.Contains(item, StringComparison.OrdinalIgnoreCase))
-                                || _secondaryWeapons.Any(item => kvp.Key.Contains(item, StringComparison.OrdinalIgnoreCase))
-                                || _grenades.Any(item => kvp.Key.Contains(item, StringComparison.OrdinalIgnoreCase)))
-                            {
-                                continue;
-                            }
-                            break;
-                        case nameof(LoadoutTypes.ALL):
-                            if (!Config.EnableGrenades && _grenades.Any(item => kvp.Key.Contains(item, StringComparison.OrdinalIgnoreCase)))
-                            {
-                                continue;
-                            }
-                            break;
-                        default:
-                            break;
-                    }
-                    // give defuser to CTs (if selected) as item_defuser does not work properly
-                    if (kvp.Key.Equals("defuser", StringComparison.OrdinalIgnoreCase)
-                        && player.Team == CsTeam.CounterTerrorist)
-                    {
-                        if (player.Pawn?.Value?.ItemServices == null)
-                        {
-                            continue;
-                        }
-                        CCSPlayer_ItemServices itemServices = new(player.Pawn.Value.ItemServices.Handle)
-                        {
-                            HasDefuser = true
-                        };
-                        continue;
-                    }
-                    // give amount of items
-                    for (int i = 0; i < kvp.Value; i++)
-                    {
-                        _ = player.GiveNamedItem(kvp.Key);
-                    }
+                    continue;
                 }
-                // announcement
-                if (Config.AnnounceLoadoutGivenChat)
+
+                player.Pawn.Value.WeaponServices.ActiveWeapon.Raw = weaponHandle.Raw;
+                player.DropActiveWeapon();
+                playerWeapon.AddEntityIOEvent("Kill", playerWeapon, null, "", 0.1f);
+            }
+        }
+
+        private void GiveLoadoutWeapons(CCSPlayerController player, LoadoutConfig loadout, LoadoutTypes loadoutType)
+        {
+            foreach (KeyValuePair<string, int> kvp in loadout.Weapons)
+            {
+                if (ShouldRemoveWeapon(kvp.Key, loadoutType))
                 {
-                    player.PrintToChat(Localizer["loadout.given.chat"]);
+                    continue;
                 }
-                if (Config.AnnounceLoadoutGivenCenter)
+
+                if (kvp.Key.Equals("defuser", StringComparison.OrdinalIgnoreCase) && player.Team == CsTeam.CounterTerrorist)
                 {
-                    player.PrintToCenter(Localizer["loadout.given.center"]);
+                    if (player.Pawn?.Value?.ItemServices != null)
+                    {
+                        new CCSPlayer_ItemServices(player.Pawn.Value.ItemServices.Handle) { HasDefuser = true };
+                    }
+                    continue;
                 }
-                if (Config.AnnounceLoadoutGivenCenterAlert)
+
+                for (int i = 0; i < kvp.Value; i++)
                 {
-                    player.PrintToCenterAlert(Localizer["loadout.given.center"]);
+                    player.GiveNamedItem(kvp.Key);
                 }
             }
         }
 
-        private void UpdatePlayerLoadout(CCSPlayerController player, string Item)
+        private void AnnounceLoadout(CCSPlayerController player)
         {
-            if (player == null
-                || !player.IsValid
-                || player.Pawn?.Value?.WeaponServices == null)
+            if (Config.AnnounceLoadoutGivenChat)
+            {
+                player.PrintToChat(Localizer["loadout.given.chat"]);
+            }
+            if (Config.AnnounceLoadoutGivenCenter)
+            {
+                player.PrintToCenter(Localizer["loadout.given.center"]);
+            }
+            if (Config.AnnounceLoadoutGivenCenterAlert)
+            {
+                player.PrintToCenterAlert(Localizer["loadout.given.center"]);
+            }
+        }
+
+        private void UpdatePlayerLoadout(CCSPlayerController player, string item)
+        {
+            if (player?.IsValid != true || player.Pawn?.Value?.WeaponServices == null)
             {
                 return;
             }
-            // check if player has loadout or create otherwise
+
             if (!_loadouts.TryGetValue(player.SteamID, out LoadoutConfig? loadout))
             {
                 loadout = new LoadoutConfig();
                 _loadouts[player.SteamID] = loadout;
             }
-            // check if weapon is found
-            string? _primaryWeapon = _primaryWeapons.FirstOrDefault(w => w.Contains(Item, StringComparison.OrdinalIgnoreCase));
-            string? _secondaryWeapon = _secondaryWeapons.FirstOrDefault(w => w.Contains(Item, StringComparison.OrdinalIgnoreCase));
-            string? _grenade = _grenades.FirstOrDefault(w => w.Contains(Item, StringComparison.OrdinalIgnoreCase));
-            string? _item = _items.FirstOrDefault(w => w.Contains(Item, StringComparison.OrdinalIgnoreCase));
 
-            if (_primaryWeapon != null)
+            string? primaryWeapon = FindWeaponInCategory(item, _primaryWeapons);
+            if (primaryWeapon != null)
             {
-                // Only allow one primary weapon in loadout
-                foreach (string weapon in _primaryWeapons)
+                RemoveWeaponsFromCategory(loadout, _primaryWeapons);
+
+                if (item.Equals("m4a1", StringComparison.OrdinalIgnoreCase))
                 {
-                    _ = loadout.Weapons.Remove(weapon);
+                    primaryWeapon = GetActualM4Variant(player) ?? primaryWeapon;
                 }
-                // check if m4a1 or m4a1_silencer was selected (both report back as m4a1 unfortunately)
-                if (Item.Equals("m4a1", StringComparison.OrdinalIgnoreCase))
+
+                loadout.Weapons[primaryWeapon] = 1;
+                return;
+            }
+
+            string? secondaryWeapon = FindWeaponInCategory(item, _secondaryWeapons);
+            if (secondaryWeapon != null)
+            {
+                RemoveWeaponsFromCategory(loadout, _secondaryWeapons);
+                loadout.Weapons[secondaryWeapon] = 1;
+                return;
+            }
+
+            string? grenade = FindWeaponInCategory(item, _grenades);
+            if (grenade != null)
+            {
+                if (!loadout.Weapons.ContainsKey(grenade))
                 {
-                    foreach (CHandle<CBasePlayerWeapon> weaponHandle in player.Pawn.Value.WeaponServices.MyWeapons)
+                    loadout.Weapons[grenade] = 1;
+                }
+                return;
+            }
+
+            string? itemName = FindWeaponInCategory(item, _items);
+            if (itemName != null)
+            {
+                loadout.Weapons[itemName] = 1;
+                return;
+            }
+
+            if (item.Equals("vest", StringComparison.OrdinalIgnoreCase))
+            {
+                loadout.Weapons.TryAdd("item_kevlar", 1);
+            }
+            else if (item.Equals("vesthelm", StringComparison.OrdinalIgnoreCase))
+            {
+                loadout.Weapons.TryAdd("item_assaultsuit", 1);
+            }
+        }
+
+        private string? GetActualM4Variant(CCSPlayerController player)
+        {
+            if (player.Pawn?.Value?.WeaponServices == null)
+            {
+                return null;
+            }
+
+            foreach (CHandle<CBasePlayerWeapon> weaponHandle in player.Pawn.Value.WeaponServices.MyWeapons)
+            {
+                if (weaponHandle?.Value is CBasePlayerWeapon playerWeapon && playerWeapon.IsValid)
+                {
+                    string? weaponName = Entities.PlayerWeaponName(playerWeapon);
+                    if (weaponName?.Contains("m4a1", StringComparison.OrdinalIgnoreCase) == true)
                     {
-                        // skip invalid weapon handles
-                        if (weaponHandle == null
-                            || !weaponHandle.IsValid)
-                        {
-                            continue;
-                        }
-                        // get weapon from handle
-                        CBasePlayerWeapon? playerWeapon = weaponHandle.Value;
-                        // skip invalid weapon
-                        if (playerWeapon == null
-                            || !playerWeapon.IsValid)
-                        {
-                            continue;
-                        }
-                        // get weapon name
-                        string? weaponName = Entities.PlayerWeaponName(playerWeapon);
-                        if (weaponName != null && weaponName.Contains("m4a1", StringComparison.OrdinalIgnoreCase))
-                        {
-                            _primaryWeapon = weaponName;
-                            break;
-                        }
+                        return weaponName;
                     }
                 }
+            }
+            return null;
+        }
 
-                loadout.Weapons[_primaryWeapon] = 1;
-            }
-            else if (_secondaryWeapon != null)
+        private void RemoveWeaponsFromCategory(LoadoutConfig loadout, HashSet<string> weapons)
+        {
+            foreach (string weapon in weapons)
             {
-                // Only allow one secondary weapon in loadout
-                foreach (string weapon in _secondaryWeapons)
-                {
-                    _ = loadout.Weapons.Remove(weapon);
-                }
-                loadout.Weapons[_secondaryWeapon] = 1;
-            }
-            else if (_grenade != null)
-            {
-                // Only add grenade if not already present
-                if (!loadout.Weapons.ContainsKey(_grenade))
-                {
-                    loadout.Weapons[_grenade] = 1;
-                }
-            }
-            else if (_item != null)
-            {
-                // Only allow one of each item
-                loadout.Weapons[_item] = 1;
-            }
-            else if (Item.Equals("vest", StringComparison.OrdinalIgnoreCase))
-            {
-                // give kevlar if player does not have it
-                if (!loadout.Weapons.ContainsKey("item_kevlar"))
-                {
-                    loadout.Weapons["item_kevlar"] = 1;
-                }
-            }
-            else if (Item.Equals("vesthelm", StringComparison.OrdinalIgnoreCase))
-            {
-                // give kevlar if player does not have it
-                if (!loadout.Weapons.ContainsKey("item_assaultsuit"))
-                {
-                    loadout.Weapons["item_assaultsuit"] = 1;
-                }
+                loadout.Weapons.Remove(weapon);
             }
         }
     }
