@@ -84,7 +84,7 @@ Map types this plug-in is disabled for. E.g. `aim_` will disable all aim_* maps 
 
 ## Commands
 
-### !loadout / !la <all|weapons|primary|secondary|grenades|items>
+### !loadout / !lo <all|weapons|primary|secondary|grenades|items>
 
 Either shows the player their current setting or allows them to change it.
 

@@ -9,7 +9,7 @@
     "admin.enabled": "[LoadoutKeeper] LoadoutKeeper is now enabled",
     "admin.disabled": "[LoadoutKeeper] LoadoutKeeper is now disabled",
     "command.loadout.invalid": "[LoadoutKeeper] Invalid loadout type: {type}. Valid types are: all, weapons, primary, secondary, grenades, items",
-    "command.loadout.usage": "[LoadoutKeeper] Currently: {current}. Usage: !la <all|weapons|primary|secondary|items>",
-    "command.loadout.usage_with_grenades": "[LoadoutKeeper] Currently: {current}. Usage: !la <all|weapons|primary|secondary|grenades|items>",
+    "command.loadout.usage": "[LoadoutKeeper] Currently: {current}. Usage: !lo <all|weapons|primary|secondary|items>",
+    "command.loadout.usage_with_grenades": "[LoadoutKeeper] Currently: {current}. Usage: !lo <all|weapons|primary|secondary|grenades|items>",
     "command.loadout.changed": "[LoadoutKeeper] Loadout type changed to: {current}"
 }

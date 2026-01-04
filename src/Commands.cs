@@ -46,7 +46,7 @@ namespace LoadoutKeeper
         }
 
         [ConsoleCommand("loadout", "LoadoutKeeper user settings")]
-        [ConsoleCommand("la", "LoadoutKeeper user settings")]
+        [ConsoleCommand("lo", "LoadoutKeeper user settings")]
         [CommandHelper(whoCanExecute: CommandUsage.CLIENT_ONLY, minArgs: 0, usage: "<all|weapons|primary|secondary|grenades|items>")]
         public void CommandLoadout(CCSPlayerController player, CommandInfo command)
         {

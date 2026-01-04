@@ -270,6 +270,14 @@ namespace LoadoutKeeper
             }
             // check which weapon type was requested
             string message = @event.Text.Trim();
+            // ignore messages without prefix
+            if ((!message.StartsWith("!")
+                && !message.StartsWith("/"))
+                || message == "!lo"
+                || message == "!loadout")
+            {
+                return HookResult.Continue;
+            }
             // Remove non-alphanumeric characters and make lowercase
             message = new string([.. message.Where(c => char.IsLetterOrDigit(c) || c == '_')]);
             // check against allowed weapons from config (if any) or all known weapons
@@ -293,9 +301,7 @@ namespace LoadoutKeeper
                 ? allowedPrimary.FirstOrDefault(w => w.Contains(message, StringComparison.OrdinalIgnoreCase))
                 : allowedSecondary.FirstOrDefault(w => w.Contains(message, StringComparison.OrdinalIgnoreCase));
             // check if requested weapon is already in loadout
-            if (requestedWeapon == null
-                || (_loadouts.TryGetValue(player.SteamID, out LoadoutConfig? loadout)
-                    && loadout.Weapons.ContainsKey(requestedWeapon)))
+            if (requestedWeapon == null)
             {
                 return HookResult.Continue;
             }
@@ -645,10 +651,6 @@ namespace LoadoutKeeper
                 {
                     loadout.Weapons["item_assaultsuit"] = 1;
                 }
-            }
-            else
-            {
-                Console.WriteLine($"Item {Item} is not a valid loadout item for player {player.SteamID}, skipping...");
             }
         }
     }
