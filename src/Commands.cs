@@ -68,7 +68,7 @@ namespace LoadoutKeeper
             }
 
             // Try exact match first
-            if (Enum.TryParse<LoadoutTypes>(loadoutType.ToUpper(System.Globalization.CultureInfo.CurrentCulture), out LoadoutTypes exactMatch))
+            if (Enum.TryParse(loadoutType.ToUpper(System.Globalization.CultureInfo.CurrentCulture), out LoadoutTypes exactMatch))
             {
                 loadout = exactMatch;
             }

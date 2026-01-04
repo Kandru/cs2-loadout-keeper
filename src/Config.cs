@@ -30,7 +30,7 @@ namespace LoadoutKeeper
         [JsonPropertyName("announce_loadout_given_center")] public bool AnnounceLoadoutGivenCenter { get; set; } = false;
         [JsonPropertyName("announce_loadout_given_center_alert")] public bool AnnounceLoadoutGivenCenterAlert { get; set; } = true;
         // loadout keeper disabled on certain map types (prefixes, case insensitive)
-        [JsonPropertyName("disabled_map_types")] public List<string> DisabledMapTypes { get; set; } = new() { "awp_", "aim_" };
+        [JsonPropertyName("disabled_map_types")] public List<string> DisabledMapTypes { get; set; } = ["awp_", "aim_"];
 
     }
 

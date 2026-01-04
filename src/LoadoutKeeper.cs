@@ -273,17 +273,17 @@ namespace LoadoutKeeper
             // Remove non-alphanumeric characters and make lowercase
             message = new string([.. message.Where(c => char.IsLetterOrDigit(c) || c == '_')]);
             // check against allowed weapons from config (if any) or all known weapons
-            var allowedPrimary = Config.AllowedChatCommandPrimaryWeapons?.Count > 0
+            List<string> allowedPrimary = Config.AllowedChatCommandPrimaryWeapons?.Count > 0
                 ? Config.AllowedChatCommandPrimaryWeapons
                 : _primaryWeapons;
-            var allowedSecondary = Config.AllowedChatCommandSecondaryWeapons?.Count > 0
+            List<string> allowedSecondary = Config.AllowedChatCommandSecondaryWeapons?.Count > 0
                 ? Config.AllowedChatCommandSecondaryWeapons
                 : _secondaryWeapons;
             bool isPrimary = allowedPrimary.Any(item => item.Contains(message, StringComparison.OrdinalIgnoreCase));
             bool isSecondary = allowedSecondary.Any(item => item.Contains(message, StringComparison.OrdinalIgnoreCase));
             // ignore if no valid weapon type was requested or if players cannot buy the requested weapon type
-            if (!isPrimary
-                && !isSecondary
+            if ((!isPrimary
+                && !isSecondary)
                 || (isPrimary && !Config.AllowChatCommandForPrimaryWeapons)
                 || (isSecondary && !Config.AllowChatCommandForSecondaryWeapons))
             {
@@ -522,7 +522,7 @@ namespace LoadoutKeeper
                         {
                             continue;
                         }
-                        var itemServices = new CCSPlayer_ItemServices(player.Pawn.Value.ItemServices.Handle)
+                        CCSPlayer_ItemServices itemServices = new(player.Pawn.Value.ItemServices.Handle)
                         {
                             HasDefuser = true
                         };
