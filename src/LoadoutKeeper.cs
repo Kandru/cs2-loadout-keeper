@@ -288,7 +288,8 @@ namespace LoadoutKeeper
             if ((!message.StartsWith("!")
                 && !message.StartsWith("/"))
                 || message == "!lo"
-                || message == "!loadout")
+                || message == "!loadout"
+                || message.Length <= 2)
             {
                 return HookResult.Continue;
             }
